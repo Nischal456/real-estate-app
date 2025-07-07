@@ -6,7 +6,7 @@ module.exports = {
     "./public/**/*.html",
   ],
   theme: {
-    extend: {},
+    extend: { extend: { fontFamily: { sans: ['Poppins', 'sans-serif'] } } },
   },
   plugins: [],
 };

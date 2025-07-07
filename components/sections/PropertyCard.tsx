@@ -13,7 +13,7 @@ const RoadIcon = () => (
 export function PropertyCard({ property }: { property: Property }) {
   const priceDisplay = property.status === 'For Rent'
     ? `Rs ${formatNpr(property.price)} / month`
-    : `Rs ${formatNpr(property.price)}`;
+    : `Rs ${formatNpr(property.price)} Per Aana`;
 
   const statusTagColor = property.status === 'For Sale' ? 'bg-green-500' : 'bg-blue-500';
 

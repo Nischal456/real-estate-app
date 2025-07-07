@@ -2,9 +2,9 @@
 
 import { useState, FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
   updateProfile,
   sendEmailVerification
 } from 'firebase/auth';
@@ -13,7 +13,23 @@ import { doc, setDoc } from 'firebase/firestore';
 import { Header } from '@/components/sections/Header';
 import { Footer } from '@/components/sections/Footer';
 import { Button } from '@/components/ui/Button';
-import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Mail, Lock, User, Phone } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+
+// A reusable input field component for a cleaner form structure
+const InputField = ({ icon: Icon, type, value, onChange, placeholder, required = true }: any) => (
+  <div className="relative">
+    <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+    <input
+      type={type}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      required={required}
+      className="w-full px-10 py-3 bg-gray-50/80 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#3fa8e4] transition-all"
+    />
+  </div>
+);
 
 export default function LoginPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -34,7 +50,7 @@ export default function LoginPage() {
         await sendEmailVerification(auth.currentUser);
         setSuccessMessage("A new verification email has been sent. Please check your inbox.");
       } else {
-        setError("Could not find user to send verification email. Please try logging in again to trigger the prompt.");
+        setError("Could not find user. Please log in again to get a new verification link.");
       }
     } catch (err: any) {
       setError("Failed to resend verification email. Please try again later.");
@@ -52,14 +68,11 @@ export default function LoginPage() {
     try {
       if (isLogin) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
-        // --- VERIFICATION CHECK ---
         if (!userCredential.user.emailVerified) {
           setError("Your email is not verified. Please check your inbox for the verification link.");
-          // Optionally, sign the user out so they can't proceed
           await auth.signOut();
-          // We don't redirect, so they can see the error and the resend button
           setIsLoading(false);
-          return; 
+          return;
         }
         router.push('/');
       } else {
@@ -70,11 +83,8 @@ export default function LoginPage() {
         }
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
-
         await updateProfile(user, { displayName: fullName });
-
-        const userDocRef = doc(db, "users", user.uid);
-        await setDoc(userDocRef, {
+        await setDoc(doc(db, "users", user.uid), {
           uid: user.uid,
           displayName: fullName,
           email: user.email,
@@ -82,66 +92,163 @@ export default function LoginPage() {
           phoneNumber: phoneNumber,
           role: 'User'
         });
-
         await sendEmailVerification(user);
-        
         setSuccessMessage("Account created! A verification link has been sent to your email. Please verify before logging in.");
-        setIsLogin(true);
+        setIsLogin(true); // Switch to login view after successful signup
       }
     } catch (err: any) {
-      if (err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password') {
-        setError("Invalid email or password.");
-      } else {
-        setError(err.message);
-      }
+      const friendlyMessage =
+        err.code === 'auth/user-not-found' || err.code === 'auth/wrong-password'
+          ? "Invalid email or password."
+          : err.code === 'auth/email-already-in-use'
+          ? "An account with this email already exists."
+          : "An unexpected error occurred. Please try again.";
+      setError(friendlyMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
+  // Animation Variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+      },
+    },
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { duration: 0.5, ease: 'easeOut' } },
+  };
+
+  const formContainerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { when: 'beforeChildren', staggerChildren: 0.1 } },
+  };
+  
   return (
     <>
       <Header />
-      <main className="flex justify-center items-center py-20 bg-gray-50">
-        <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
-          <h1 className="text-2xl font-bold text-center text-gray-800">{isLogin ? 'Login' : 'Sign Up'}</h1>
+      <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4" style={{
+        backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')"
+      }}>
+        <div className="container mx-auto max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white rounded-2xl shadow-2xl overflow-hidden">
           
-          {successMessage && (
-              <div className="flex items-center text-sm text-green-700 bg-green-100 p-3 rounded-md">
-                <CheckCircle className="mr-2 h-4 w-4" /> {successMessage}
-              </div>
-          )}
-          {error && (
-              <div className="flex flex-col text-sm text-red-600 bg-red-100 p-3 rounded-md">
-                <div className="flex items-center">
-                    <AlertCircle className="mr-2 h-4 w-4" /> {error}
-                </div>
-                {error.includes("not verified") && (
-                    <button onClick={handleResendVerification} disabled={isLoading} className="mt-2 text-sm font-semibold text-blue-600 hover:underline self-start">
-                        {isLoading ? 'Sending...' : 'Resend verification email'}
-                    </button>
-                )}
-              </div>
-            )}
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {!isLogin && (
-              <>
-                <input type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full Name" required className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" />
-                <input type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone Number" required className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" />
-              </>
-            )}
-            <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" required className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" />
-            <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" required className="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" />
+          {/* Left Panel - Your Image */}
+          <div className="hidden md:flex flex-col justify-center p-12 text-white relative overflow-hidden">
+            <motion.div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{ backgroundImage: "url('/loginmap.png')" }}
+              initial={{ scale: 1.15 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 15, ease: "linear", repeat: Infinity, repeatType: "mirror" }}
+            />
+            <div className="absolute inset-0 bg-black/40"></div>
             
-            <Button type="submit" disabled={isLoading} className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90">
-              {isLoading ? <Loader2 className="animate-spin mx-auto" /> : (isLogin ? 'Login' : 'Create Account')}
-            </Button>
-          </form>
-          <div className="text-center">
-            <button onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMessage(null); }} className="text-sm text-[#3fa8e4] hover:underline">
-              {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
-            </button>
+            <motion.div
+              className="relative z-10"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
+                <motion.h1 variants={itemVariants} className="text-5xl font-extrabold leading-tight font-poppins  text-shadow-lg">
+                  Welcome Back!
+                </motion.h1>
+                <motion.p variants={itemVariants} className="mt-4 text-lg font-light text-shadow">
+                  Your next property is just a few clicks away. Access your account to continue your journey.
+                </motion.p>
+            </motion.div>
+          </div>
+
+          {/* Right Panel (Form) */}
+          <div className="p-8 md:p-12">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={isLogin ? 'login' : 'signup'}
+                variants={formContainerVariants}
+                initial="hidden"
+                animate="visible"
+                exit={{ opacity: 0, x: -30 }}
+                transition={{ duration: 0.5, ease: 'easeInOut' }}
+              >
+                <motion.div variants={itemVariants}>
+                    <h1 className="text-3xl font-bold text-center text-gray-800 mb-2">{isLogin ? 'Login' : 'Create Account'}</h1>
+                    <p className="text-center text-gray-500 mb-6">{isLogin ? 'Sign in to your account' : 'Join us and find your dream home'}</p>
+                </motion.div>
+                
+                <AnimatePresence mode="wait">
+                  {successMessage && (
+                    <motion.div
+                      key="success"
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="flex items-center text-sm text-green-800 bg-green-100 p-3 rounded-lg mb-4"
+                    >
+                      <CheckCircle className="mr-2 h-5 w-5 flex-shrink-0" /> {successMessage}
+                    </motion.div>
+                  )}
+                  {error && (
+                    <motion.div
+                      key="error"
+                      initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+                      className="flex flex-col text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4"
+                    >
+                      <div className="flex items-center">
+                        <AlertCircle className="mr-2 h-5 w-5 flex-shrink-0" /> {error}
+                      </div>
+                      {error.includes("not verified") && (
+                        <button onClick={handleResendVerification} disabled={isLoading} className="mt-2 text-sm font-semibold text-blue-600 hover:underline self-start disabled:opacity-50">
+                          {isLoading ? 'Sending...' : 'Resend verification email'}
+                        </button>
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                <motion.form onSubmit={handleSubmit} className="space-y-4" variants={containerVariants} initial="hidden" animate="visible">
+                  <AnimatePresence>
+                    {!isLogin && (
+                      <motion.div
+                        className="space-y-4"
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.4, ease: 'easeInOut', when: 'beforeChildren', staggerChildren: 0.1 }}
+                      >
+                        <motion.div variants={itemVariants}>
+                            <InputField icon={User} type="text" value={fullName} onChange={(e: any) => setFullName(e.target.value)} placeholder="Full Name" />
+                        </motion.div>
+                        <motion.div variants={itemVariants}>
+                            <InputField icon={Phone} type="tel" value={phoneNumber} onChange={(e: any) => setPhoneNumber(e.target.value)} placeholder="Phone Number" />
+                        </motion.div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  
+                  <motion.div variants={itemVariants}>
+                    <InputField icon={Mail} type="email" value={email} onChange={(e: any) => setEmail(e.target.value)} placeholder="Email Address" />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <InputField icon={Lock} type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} placeholder="Password" />
+                  </motion.div>
+                  
+                  <motion.div variants={itemVariants} whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button type="submit" disabled={isLoading} className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90 text-lg py-3 transition-all duration-300 transform">
+                      {isLoading ? <Loader2 className="animate-spin mx-auto" /> : (isLogin ? 'Login' : 'Create Account')}
+                    </Button>
+                  </motion.div>
+                </motion.form>
+                
+                <motion.div variants={itemVariants} className="text-center mt-6">
+                  <button onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMessage(null); }} className="text-sm text-[#3fa8e4] hover:underline font-semibold">
+                    {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
+                  </button>
+                </motion.div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </main>

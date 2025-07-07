@@ -1,21 +1,22 @@
 import { Header } from '@/components/sections/Header';
 import { Footer } from '@/components/sections/Footer';
-import { PropertyCard } from '@/components/sections/PropertyCard';
 import { Property } from '@/types';
-import { Search } from 'lucide-react';
-import { Filters } from '@/components/property/Filters'; // Import the new component
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
+import { PropertiesClientView } from './PropertiesClientView'; // Import the new client component
 
 async function getFilteredProperties(searchParams: { [key: string]: string | string[] | undefined }): Promise<Property[]> {
   try {
     const params = new URLSearchParams();
-    for (const key in searchParams) {
-      const value = searchParams[key];
-      if (typeof value === 'string') {
-        params.append(key, value);
-      }
-    }
+    const query = searchParams.query;
+    const type = searchParams.type;
+    const location = searchParams.location;
+    const status = searchParams.status;
+
+    if (query && typeof query === 'string') params.append('query', query);
+    if (type && typeof type === 'string') params.append('type', type);
+    if (location && typeof location === 'string') params.append('location', location);
+    if (status && typeof status === 'string') params.append('status', status);
     
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/properties?${params.toString()}`, { 
       cache: 'no-store' 
@@ -32,30 +33,9 @@ async function getFilteredProperties(searchParams: { [key: string]: string | str
   }
 }
 
-function PropertiesList({ properties }: { properties: Property[] }) {
-  if (properties.length === 0) {
-    return (
-      <div className="text-center py-20">
-        <Search className="mx-auto h-16 w-16 text-gray-300" />
-        <p className="mt-4 text-xl text-gray-500">No properties found matching your criteria.</p>
-        <p className="text-gray-400">Try adjusting your search filters.</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-      {properties.map(prop => (
-        <PropertyCard key={prop.id} property={prop} />
-      ))}
-    </div>
-  );
-}
-
-function PropertiesListSkeleton() {
+function PropertiesPageSkeleton() {
     return <div className="text-center py-20"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4] mx-auto" /></div>;
 }
-
 
 export default async function PropertiesPage({ searchParams }: { searchParams: { [key:string]: string | string[] | undefined } }) {
   const properties = await getFilteredProperties(searchParams);
@@ -64,21 +44,20 @@ export default async function PropertiesPage({ searchParams }: { searchParams: {
     <div className="bg-gray-50 min-h-screen">
       <Header />
       <main className="container mx-auto px-4 lg:px-6 py-12">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-gray-800">
+        {/* The animated title is now part of the main page for a smoother entry */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-800 tracking-tight">
             Find Your Next Property
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-gray-500 mt-3 text-lg">
             Browse all listings or use the filters to narrow your search.
           </p>
         </div>
         
-        {/* Add the interactive Filters component */}
-        <Filters />
-        
-        {/* Suspense boundary for a better loading experience */}
-        <Suspense fallback={<PropertiesListSkeleton />}>
-            <PropertiesList properties={properties} />
+        {/* Suspense handles the initial loading state */}
+        <Suspense fallback={<PropertiesPageSkeleton />}>
+            {/* The new client component receives the data and handles all animations */}
+            <PropertiesClientView properties={properties} />
         </Suspense>
 
       </main>

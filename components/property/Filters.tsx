@@ -2,7 +2,6 @@
 
 import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import { useDebouncedCallback } from 'use-debounce';
-import { Button } from '@/components/ui/Button';
 
 export function Filters() {
   const router = useRouter();

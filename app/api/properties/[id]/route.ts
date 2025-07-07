@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { db } from '@/lib/firebase';
-import { doc, getDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
+// Handles fetching a single property by its ID. This is a public action.
 export async function GET(
   request: Request, 
   context: { params: { id: string } }
@@ -11,43 +11,87 @@ export async function GET(
     if (!id) {
       return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
     }
-    const docRef = doc(db, "properties", id);
-    const docSnap = await getDoc(docRef);
-    if (!docSnap.exists()) {
+    const docRef = adminDb.collection("properties").doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
       return NextResponse.json({ message: "Property not found" }, { status: 404 });
     }
-    const property = { id: docSnap.id, ...docSnap.data() };
-    return NextResponse.json(property, { status: 200 });
+
+    return NextResponse.json({ id: docSnap.id, ...docSnap.data() }, { status: 200 });
   } catch (error) {
+    console.error("Error fetching property:", error);
     return NextResponse.json({ message: "Failed to fetch property" }, { status: 500 });
   }
 }
 
+// Handles updating a single property by its ID. This is a secure action.
 export async function PUT(
   request: Request, 
   context: { params: { id: string } }
 ) {
   try {
+    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+    
     const id = context.params.id;
     const propertyData = await request.json();
-    const docRef = doc(db, "properties", id);
-    await updateDoc(docRef, propertyData);
+    const docRef = adminDb.collection("properties").doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+        return NextResponse.json({ message: "Property not found" }, { status: 404 });
+    }
+
+    if (docSnap.data()?.ownerId !== uid) {
+        return NextResponse.json({ message: "Forbidden: You do not have permission to edit this property." }, { status: 403 });
+    }
+
+    await docRef.update(propertyData);
     return NextResponse.json({ message: "Property updated successfully" }, { status: 200 });
   } catch (error) {
+    console.error("Error updating property:", error);
     return NextResponse.json({ message: "Failed to update property" }, { status: 500 });
   }
 }
 
+
+// Handles deleting a single property by its ID. This is a secure action.
 export async function DELETE(
   request: Request, 
   context: { params: { id: string } }
 ) {
   try {
+    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+    const decodedToken = await adminAuth.verifyIdToken(token);
+    const uid = decodedToken.uid;
+    const isAdmin = decodedToken.admin === true;
+
     const id = context.params.id;
-    const docRef = doc(db, "properties", id);
-    await deleteDoc(docRef);
+    const docRef = adminDb.collection("properties").doc(id);
+    const docSnap = await docRef.get();
+
+    if (!docSnap.exists) {
+      return NextResponse.json({ message: "Property not found" }, { status: 404 });
+    }
+
+    // Allow deletion if the user is the owner OR if the user is an admin
+    if (docSnap.data()?.ownerId !== uid && !isAdmin) {
+      return NextResponse.json({ message: "Forbidden: You do not have permission to delete this property." }, { status: 403 });
+    }
+
+    await docRef.delete();
+    
     return NextResponse.json({ message: "Property deleted successfully" }, { status: 200 });
   } catch (error) {
+    console.error("Error deleting property:", error);
     return NextResponse.json({ message: "Failed to delete property" }, { status: 500 });
   }
 }

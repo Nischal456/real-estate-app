@@ -9,59 +9,80 @@ import { Property } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Edit, Trash2, Loader2, AlertCircle } from 'lucide-react';
-import { collection, query, where, getDocs, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/Button';
 
 export default function MyPropertiesPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const [properties, setProperties] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (user === null) {
+    if (authLoading) {
+      return;
+    }
+    if (!user) {
       router.push('/login');
       return;
     }
 
     const fetchProperties = async () => {
-      if (user) {
-        try {
-          const q = query(collection(db, "properties"), where("ownerId", "==", user.uid));
-          const querySnapshot = await getDocs(q);
-          const userProperties = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
-          setProperties(userProperties);
-        } catch (err) {
-          setError("Failed to fetch your properties.");
-        } finally {
-          setLoading(false);
-        }
+      setLoading(true);
+      try {
+        const q = query(collection(db, "properties"), where("ownerId", "==", user.uid));
+        const querySnapshot = await getDocs(q);
+        const userProperties = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
+        setProperties(userProperties);
+      } catch (err) {
+        setError("Failed to fetch your properties.");
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchProperties();
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleDelete = async (propertyId: string) => {
     if (!window.confirm("Are you sure you want to delete this property? This action cannot be undone.")) {
       return;
     }
+    if (!user) {
+      alert("You must be logged in to delete a property.");
+      return;
+    }
+
     try {
-      await deleteDoc(doc(db, "properties", propertyId));
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/properties/${propertyId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to delete property.");
+      }
+
       setProperties(prev => prev.filter(p => p.id !== propertyId));
+      alert("Property deleted successfully.");
+
     } catch (err) {
+      console.error(err);
       alert("Failed to delete property. Please try again.");
     }
   };
 
-  if (loading) {
+  if (authLoading || loading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" /></div>;
   }
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-gray-50">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-12">
         <h1 className="text-3xl font-bold text-gray-800 mb-8">My Properties</h1>
