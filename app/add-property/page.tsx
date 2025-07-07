@@ -33,7 +33,7 @@ function FormSelect({ label, id, children, ...props }: any) {
 }
 
 export default function AddPropertyPage() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   const formRef = useRef<HTMLFormElement>(null);
   
@@ -44,10 +44,10 @@ export default function AddPropertyPage() {
   const [imageFiles, setImageFiles] = useState<File[]>([]);
 
   useEffect(() => {
-    if (!user) {
+    if (!authLoading && !user) {
       router.push('/login');
     }
-  }, [user, router]);
+  }, [user, authLoading, router]);
 
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files) {
@@ -129,8 +129,12 @@ export default function AddPropertyPage() {
     }
   };
 
-  if (!user) {
-    return null;
+  if (authLoading || !user) {
+    return (
+        <div className="flex h-screen items-center justify-center">
+            <Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" />
+        </div>
+    );
   }
 
   return (

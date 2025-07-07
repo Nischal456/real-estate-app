@@ -8,7 +8,6 @@ export function Filters() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
 
-  // Debounce callback to avoid making too many requests while typing
   const handleSearch = useDebouncedCallback((term: string) => {
     const params = new URLSearchParams(searchParams);
     if (term) {

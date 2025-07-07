@@ -44,7 +44,6 @@ export default async function PropertiesPage({ searchParams }: { searchParams: {
     <div className="bg-gray-50 min-h-screen">
       <Header />
       <main className="container mx-auto px-4 lg:px-6 py-12">
-        {/* The animated title is now part of the main page for a smoother entry */}
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-gray-800 tracking-tight">
             Find Your Next Property
@@ -54,9 +53,7 @@ export default async function PropertiesPage({ searchParams }: { searchParams: {
           </p>
         </div>
         
-        {/* Suspense handles the initial loading state */}
         <Suspense fallback={<PropertiesPageSkeleton />}>
-            {/* The new client component receives the data and handles all animations */}
             <PropertiesClientView properties={properties} />
         </Suspense>
 

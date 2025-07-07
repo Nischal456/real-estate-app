@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import { PropertyCard } from '@/components/sections/PropertyCard';
 import { Property } from '@/types';
@@ -11,7 +11,7 @@ const containerVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: { staggerChildren: 0.1 },
+    transition: { staggerChildren: 0.07 },
   },
 };
 
@@ -19,20 +19,6 @@ const containerVariants = {
 const itemVariants = {
   hidden: { y: 20, opacity: 0 },
   visible: { y: 0, opacity: 1, transition: { type: 'spring', stiffness: 100 } },
-};
-
-// Animation for the property card grid items
-const gridItemVariants = {
-  hidden: { scale: 0.95, opacity: 0 },
-  visible: {
-    scale: 1,
-    opacity: 1,
-    transition: {
-      type: 'spring',
-      stiffness: 120,
-      damping: 15,
-    },
-  },
 };
 
 export function PropertiesClientView({ properties }: { properties: Property[] }) {
@@ -43,12 +29,12 @@ export function PropertiesClientView({ properties }: { properties: Property[] })
       animate="visible"
       className="space-y-12"
     >
-      {/* Filters are now rendered outside the conditional check, so they are always visible */}
+      {/* The Filters component is rendered here, so it is always visible */}
       <motion.div variants={itemVariants}>
         <Filters />
       </motion.div>
 
-      {/* --- THIS IS THE CORRECTED LOGIC --- */}
+      {/* --- This is the corrected logic --- */}
       {properties.length > 0 ? (
         // If properties exist, show the animated grid
         <motion.div
@@ -58,7 +44,7 @@ export function PropertiesClientView({ properties }: { properties: Property[] })
           {properties.map(prop => (
             <motion.div
               key={prop.id}
-              variants={gridItemVariants}
+              variants={itemVariants}
               whileHover={{ y: -8, transition: { type: 'spring', stiffness: 300 } }}
             >
               <PropertyCard property={prop} />
