@@ -73,8 +73,7 @@ export default function EditPropertyPage() {
     setSuccess(null);
     try {
       const docRef = doc(db, "properties", id);
-      const { id: propertyId, ...updateData } = property;
-      console.log(propertyId); // To satisfy ESLint 'no-unused-vars'
+      const { id: _, ...updateData } = property; // Correctly exclude id
       await updateDoc(docRef, updateData);
       setSuccess("Property updated successfully!");
       setTimeout(() => router.push('/my-properties'), 1500);

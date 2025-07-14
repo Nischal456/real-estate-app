@@ -1,6 +1,6 @@
 import { NextResponse as EnquiryNextResponse } from 'next/server';
 import { db as enquiryDb } from '@/lib/firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection as enquiryCollection, addDoc as enquiryAddDoc } from 'firebase/firestore';
 
 export async function POST(request: Request) {
   try {
@@ -8,7 +8,7 @@ export async function POST(request: Request) {
     if (!enquiryData.recipientId || !enquiryData.senderName || !enquiryData.propertyId) {
       return EnquiryNextResponse.json({ message: 'Missing required fields.' }, { status: 400 });
     }
-    await addDoc(collection(enquiryDb, "notifications"), {
+    await enquiryAddDoc(enquiryCollection(enquiryDb, "notifications"), {
       ...enquiryData,
       read: false,
       createdAt: new Date().toISOString(),

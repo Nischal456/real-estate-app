@@ -2,15 +2,14 @@ import { Header } from '@/components/sections/Header';
 import { Footer } from '@/components/sections/Footer';
 import { Property } from '@/types';
 import { formatNpr } from '@/lib/utils';
-import Image from 'next/image';
-import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle, Phone } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle } from 'lucide-react';
 import { ImageGallery } from '@/components/property/ImageGallery';
 import { EnquiryForm } from '@/components/property/EnquiryForm';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const RoadIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
       <path d="M4 17l4-12" /><path d="M20 5l-4 12" /><path d="M16 5h4" /><path d="M4 17h4" />
     </svg>
 );
@@ -42,7 +41,7 @@ async function getProperty(id: string): Promise<Property | null> {
       }
     }
     return { ...propertyData, id: propertyDocSnap.id, ...ownerDetails } as Property;
-  } catch (error) {
+  } catch {
     return null;
   }
 }

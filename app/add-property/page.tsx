@@ -150,7 +150,7 @@ export default function AddPropertyPage() {
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
               <FormInput name="title" label="Listing Title" placeholder="e.g., Beautiful Modern Villa / Prime Plot of Land" required />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormSelect name="propertyType" label="Property Type" value={propertyType} onChange={(e: ChangeEvent<HTMLSelectElement>) => setPropertyType(e.target.value as 'House' | 'Apartment' | 'Land')}>
+                <FormSelect name="propertyType" label="Property Type" value={propertyType} onChange={(e) => setPropertyType(e.target.value as 'House' | 'Apartment' | 'Land')}>
                   <option value="House">House</option>
                   <option value="Apartment">Apartment</option>
                   <option value="Land">Land</option>
