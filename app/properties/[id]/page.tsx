@@ -7,9 +7,10 @@ import { ImageGallery } from '@/components/property/ImageGallery';
 import { EnquiryForm } from '@/components/property/EnquiryForm';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import Image from 'next/image';
 
 const RoadIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
       <path d="M4 17l4-12" /><path d="M20 5l-4 12" /><path d="M16 5h4" /><path d="M4 17h4" />
     </svg>
 );
@@ -21,12 +22,12 @@ async function getProperty(id: string): Promise<Property | null> {
     if (!propertyDocSnap.exists()) return null;
     const propertyData = propertyDocSnap.data();
     const ownerId = propertyData.ownerId;
-    const ownerDetails: any = {
+    const ownerDetails = {
       ownerName: propertyData.ownerName || 'Anonymous',
       ownerPhotoUrl: propertyData.ownerPhotoUrl || null,
       ownerPhoneNumber: propertyData.ownerPhoneNumber || undefined,
-      ownerEmail: undefined,
-      ownerRole: 'User'
+      ownerEmail: undefined as string | undefined,
+      ownerRole: 'User' as 'Owner' | 'Agent' | 'User'
     };
     if (ownerId) {
       const userDocRef = doc(db, "users", ownerId);

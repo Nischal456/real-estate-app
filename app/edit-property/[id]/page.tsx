@@ -73,7 +73,7 @@ export default function EditPropertyPage() {
     setSuccess(null);
     try {
       const docRef = doc(db, "properties", id);
-      const { id: _, ...updateData } = property; // Correctly exclude id
+      const { id: _, ...updateData } = property;
       await updateDoc(docRef, updateData);
       setSuccess("Property updated successfully!");
       setTimeout(() => router.push('/my-properties'), 1500);
@@ -114,3 +114,4 @@ export default function EditPropertyPage() {
     </>
   );
 }
+

@@ -6,23 +6,20 @@ import Image from 'next/image';
 
 export function Footer() {
   const year = new Date().getFullYear();
-
   const socialLinks = [
-    { href: 'https://www.facebook.com/profile.php?id=100084136977173', icon: <Facebook size={20} />, name: 'Facebook' },
-    { href: 'https://www.instagram.com/ebazarsecurities?igsh=MTRmemhnNGQ5ZmE0eQ==', icon: <Instagram size={20} />, name: 'Instagram' },
+    { href: '#', icon: <Facebook className="w-5 h-5" />, name: 'Facebook' },
+    { href: '#', icon: <Instagram className="w-5 h-5" />, name: 'Instagram' },
   ];
-
   const quickLinks = [
     { href: '/properties', label: 'Properties' },
     { href: '/about', label: 'About Us' },
     { href: '/contact', label: 'Contact' },
     { href: '/terms', label: 'Terms of Service' },
   ];
-
   const contactInfo = [
-    { icon: <MapPin size={16} />, text: 'Bhotebahal, Kathmandu - 44600' },
-    { icon: <Mail size={16} />, text: 'ebazarsecurities@gmail.com' },
-    { icon: <Phone size={16} />, text: '+977 9822790665' },
+    { icon: <MapPin size={16} />, text: '123 Real Estate Ave, Property City' },
+    { icon: <Mail size={16} />, text: 'contact@ebazarsecurities.com' },
+    { icon: <Phone size={16} />, text: '(123) 456-7890' },
   ];
 
   return (
@@ -39,13 +36,13 @@ export function Footer() {
           animation: animated-gradient 15s ease infinite;
         }
       `}</style>
-      
       <footer className="animated-gradient-bg text-white pt-20 pb-10 mt-20">
         <div className="container mx-auto px-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
             <div>
               <h3 className="text-2xl font-extrabold mb-4 text-white flex items-center">
-                <Image src="/logo.png" alt="E-Bazar Securities" width={180} height={100} className="mr-2 filter brightness-0 invert" />
+                <Image src="/logo.png" alt="E-Bazar Securities" width={40} height={40} className="mr-2 filter brightness-0 invert" />
+                E-Bazar Securities
               </h3>
               <p className="text-gray-400 leading-relaxed">
                 Buy, sell, rent — easy with us,<br />
@@ -91,7 +88,7 @@ export function Footer() {
             </div>
           </div>
           <div className="mt-16 pt-8 border-t border-white/10 text-center text-gray-500 text-sm">
-            &copy; {year} E-Bazar Securities. All rights reserved.
+            &copy; {year} E-Bazar Securities. All rights reserved. Designed with ❤️.
           </div>
         </div>
       </footer>
