@@ -160,5 +160,5 @@ export default function AboutUsPage() {
       </motion.div>
       <Footer />
     </div>
-     );
+  );
 }
