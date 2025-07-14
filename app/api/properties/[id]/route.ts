@@ -1,17 +1,15 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
+// Handles fetching a single property by its ID. This is a public action.
 export async function GET(
   request: Request,
-  context: { params: Record<string, string | string[]> }
+  { params }: { params: { id: string } }
 ) {
-  const idParam = context.params.id;
-  const id = Array.isArray(idParam) ? idParam[0] : idParam;
-
+  const { id } = params;
   if (!id) {
     return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
   }
-
   try {
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
@@ -27,26 +25,20 @@ export async function GET(
   }
 }
 
+// Handles updating a single property by its ID. This is a secure action.
 export async function PUT(
   request: Request,
-  context: { params: Record<string, string | string[]> }
+  { params }: { params: { id: string } }
 ) {
-  const idParam = context.params.id;
-  const id = Array.isArray(idParam) ? idParam[0] : idParam;
-
-  if (!id) {
-    return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
-  }
-
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    if (!token) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
-    const token = authHeader.split('Bearer ')[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
+    const { id } = params;
     const propertyData = await request.json();
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
@@ -67,27 +59,21 @@ export async function PUT(
   }
 }
 
+// Handles deleting a single property by its ID. This is a secure action.
 export async function DELETE(
   request: Request,
-  context: { params: Record<string, string | string[]> }
+  { params }: { params: { id: string } }
 ) {
-  const idParam = context.params.id;
-  const id = Array.isArray(idParam) ? idParam[0] : idParam;
-
-  if (!id) {
-    return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
-  }
-
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
+    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    if (!token) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
-    const token = authHeader.split('Bearer ')[1];
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
+    const { id } = params;
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
@@ -95,6 +81,7 @@ export async function DELETE(
       return NextResponse.json({ message: "Property not found" }, { status: 404 });
     }
 
+    // Allow deletion if the user is the owner OR if the user is an admin
     if (docSnap.data()?.ownerId !== uid && !isAdmin) {
       return NextResponse.json({ message: "Forbidden: You do not have permission to delete this property." }, { status: 403 });
     }
