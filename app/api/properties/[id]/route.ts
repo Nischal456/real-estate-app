@@ -1,12 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
-// GET: Fetch a property by ID
 export async function GET(
-  request: Request, 
-  context: { params: { id: string } }
+  request: Request,
+  context: { params: Record<string, string | string[]> }
 ) {
-  const { id } = context.params;
+  const idParam = context.params.id;
+  const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
   if (!id) {
     return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
@@ -27,12 +27,12 @@ export async function GET(
   }
 }
 
-// PUT: Update a property by ID (Authorization required)
 export async function PUT(
-  request: Request, 
-  context: { params: { id: string } }
+  request: Request,
+  context: { params: Record<string, string | string[]> }
 ) {
-  const { id } = context.params;
+  const idParam = context.params.id;
+  const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
   if (!id) {
     return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
@@ -67,12 +67,12 @@ export async function PUT(
   }
 }
 
-// DELETE: Delete a property by ID (Authorization required)
 export async function DELETE(
-  request: Request, 
-  context: { params: { id: string } }
+  request: Request,
+  context: { params: Record<string, string | string[]> }
 ) {
-  const { id } = context.params;
+  const idParam = context.params.id;
+  const id = Array.isArray(idParam) ? idParam[0] : idParam;
 
   if (!id) {
     return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
