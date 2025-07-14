@@ -12,8 +12,17 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
 
-// Reusable form components
-function FormInput({ label, id, ...props }: any) {
+interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  label: string;
+  id: string;
+}
+interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
+  label: string;
+  id: string;
+  children: React.ReactNode;
+}
+
+function FormInput({ label, id, ...props }: InputProps) {
     return (
       <div>
         <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -21,7 +30,7 @@ function FormInput({ label, id, ...props }: any) {
       </div>
     );
 }
-function FormSelect({ label, id, children, ...props }: any) {
+function FormSelect({ label, id, children, ...props }: SelectProps) {
     return (
         <div>
             <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
@@ -53,14 +62,12 @@ export default function AddPropertyPage() {
     if (event.target.files) {
       const newFiles = Array.from(event.target.files);
       const combinedFiles = [...imageFiles, ...newFiles];
-      
       if (combinedFiles.length > 5) {
         setError('You can upload a maximum of 5 images.');
         return;
       }
       const uniqueFiles = Array.from(new Map(combinedFiles.map(file => [`${file.name}-${file.size}`, file])).values());
       setImageFiles(uniqueFiles);
-      
       event.target.value = '';
     }
   };
@@ -98,7 +105,6 @@ export default function AddPropertyPage() {
       const userProfile = userDocSnap.data();
 
       const formData = new FormData(formRef.current);
-      
       formData.delete('images');
       imageFiles.forEach(file => formData.append('images', file));
       
@@ -122,19 +128,16 @@ export default function AddPropertyPage() {
       setSuccess(true);
       setTimeout(() => router.push('/'), 2000);
 
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
     } finally {
       setLoading(false);
     }
   };
 
   if (authLoading || !user) {
-    return (
-        <div className="flex h-screen items-center justify-center">
-            <Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" />
-        </div>
-    );
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" /></div>;
   }
 
   return (
@@ -145,10 +148,9 @@ export default function AddPropertyPage() {
           <div className="bg-white p-8 rounded-lg shadow-md">
             <h1 className="text-3xl font-bold text-gray-800 mb-6">List Your Property</h1>
             <form ref={formRef} onSubmit={handleSubmit} className="space-y-6">
-              
               <FormInput name="title" label="Listing Title" placeholder="e.g., Beautiful Modern Villa / Prime Plot of Land" required />
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <FormSelect name="propertyType" label="Property Type" value={propertyType} onChange={(e: ChangeEvent<HTMLSelectElement>) => setPropertyType(e.target.value as any)}>
+                <FormSelect name="propertyType" label="Property Type" value={propertyType} onChange={(e: ChangeEvent<HTMLSelectElement>) => setPropertyType(e.target.value as 'House' | 'Apartment' | 'Land')}>
                   <option value="House">House</option>
                   <option value="Apartment">Apartment</option>
                   <option value="Land">Land</option>
@@ -158,7 +160,6 @@ export default function AddPropertyPage() {
                   <option>For Rent</option>
                 </FormSelect>
               </div>
-
               {propertyType === 'Land' ? (
                 <div className="space-y-6 pt-4 border-t">
                   <h2 className="text-xl font-semibold text-gray-700">Land Details</h2>
@@ -199,49 +200,28 @@ export default function AddPropertyPage() {
                   </div>
                 </div>
               )}
-
               <div className="pt-4 border-t">
                  <FormInput name="price" label="Price (in NPR)" type="number" placeholder="e.g., 25000000" required />
               </div>
-              
               <div>
                 <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea name="description" id="description" rows={4} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" placeholder="Describe the property..."></textarea>
               </div>
-
               <div className="pt-4 border-t">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Property Images (up to 5)</label>
                 <p className="text-xs text-gray-500 mb-3">Drag and drop to reorder. The first image will be the featured one.</p>
-                
                 <DragDropContext onDragEnd={onDragEnd}>
                   <Droppable droppableId="image-previews" direction="horizontal">
                     {(provided) => (
-                      <div 
-                        {...provided.droppableProps} 
-                        ref={provided.innerRef}
-                        className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4"
-                      >
+                      <div {...provided.droppableProps} ref={provided.innerRef} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
                         {imageFiles.map((file, index) => (
                           <Draggable key={`${file.name}-${index}`} draggableId={`${file.name}-${index}`} index={index}>
                             {(provided, snapshot) => (
-                              <div
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                                className={`relative aspect-square border-2 rounded-md ${snapshot.isDragging ? 'border-blue-500 shadow-lg' : 'border-transparent'}`}
-                              >
+                              <div ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} className={`relative aspect-square border-2 rounded-md ${snapshot.isDragging ? 'border-blue-500 shadow-lg' : 'border-transparent'}`}>
                                 <Image src={URL.createObjectURL(file)} alt="Preview" layout="fill" objectFit="cover" className="rounded-md" />
-                                <button type="button" onClick={() => removeImage(index)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors z-10">
-                                  <XCircle size={20} />
-                                </button>
-                                {index === 0 && (
-                                  <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-0.5 font-semibold">
-                                    Featured
-                                  </div>
-                                )}
-                                <div className="absolute top-1 left-1 bg-white/70 p-0.5 rounded-sm cursor-grab">
-                                    <GripVertical size={16} className="text-gray-600" />
-                                </div>
+                                <button type="button" onClick={() => removeImage(index)} className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-0.5 hover:bg-red-600 transition-colors z-10"><XCircle size={20} /></button>
+                                {index === 0 && (<div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs text-center py-0.5 font-semibold">Featured</div>)}
+                                <div className="absolute top-1 left-1 bg-white/70 p-0.5 rounded-sm cursor-grab"><GripVertical size={16} className="text-gray-600" /></div>
                               </div>
                             )}
                           </Draggable>
@@ -251,7 +231,6 @@ export default function AddPropertyPage() {
                     )}
                   </Droppable>
                 </DragDropContext>
-
                 {imageFiles.length < 5 && (
                   <div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
                     <div className="space-y-1 text-center">
@@ -268,7 +247,6 @@ export default function AddPropertyPage() {
                   </div>
                 )}
               </div>
-
               <div className="pt-4">
                 <Button type="submit" disabled={loading || success} className="w-full justify-center bg-[#3fa8e4] hover:bg-[#3fa8e4]/90">
                   {loading && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
@@ -276,11 +254,7 @@ export default function AddPropertyPage() {
                   {loading ? 'Submitting...' : success ? 'Property Listed!' : 'Add Property'}
                 </Button>
               </div>
-              {error && (
-                <div className="flex items-center text-red-600 bg-red-100 p-3 rounded-md">
-                  <AlertCircle className="mr-2" /> {error}
-                </div>
-              )}
+              {error && (<div className="flex items-center text-red-600 bg-red-100 p-3 rounded-md"><AlertCircle className="mr-2" /> {error}</div>)}
             </form>
           </div>
         </div>

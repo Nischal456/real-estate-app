@@ -1,10 +1,7 @@
 import { NextResponse } from 'next/server';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { v2 as cloudinary } from 'cloudinary';
 import sharp from 'sharp';
-import { Property } from '@/types';
-import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -15,20 +12,27 @@ cloudinary.config({
 export async function POST(request: Request) {
   try {
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
-    if (!token) return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    if (!token) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
     const formData = await request.formData();
     const imageFiles = formData.getAll('images') as File[];
+
     if (!imageFiles || imageFiles.length === 0) {
       return NextResponse.json({ message: 'At least one image file is required.' }, { status: 400 });
     }
 
     const uploadPromises = imageFiles.map(async (file) => {
       const imageBuffer = await file.arrayBuffer();
-      const optimizedBuffer = await sharp(Buffer.from(imageBuffer)).resize({ width: 1200 }).webp({ quality: 80 }).toBuffer();
-      const dataUri = `data:image/webp;base64,${optimizedBuffer.toString('base64')}`;
+      const optimizedBuffer = await sharp(Buffer.from(imageBuffer))
+        .resize({ width: 1200 })
+        .webp({ quality: 80 })
+        .toBuffer();
+      const base64Image = optimizedBuffer.toString('base64');
+      const dataUri = `data:image/webp;base64,${base64Image}`;
       const uploadResult = await cloudinary.uploader.upload(dataUri, { folder: 'dream_homes' });
       return uploadResult.secure_url;
     });
@@ -67,12 +71,12 @@ export async function POST(request: Request) {
     const docRef = await adminDb.collection("properties").add(propertyData);
     return NextResponse.json({ message: "Property added successfully", id: docRef.id }, { status: 201 });
 
-  } catch (error: any) {
-    console.error("Error adding property: ", error);
+  } catch (error) {
+    const err = error as Error;
+    console.error("Error adding property: ", err);
     return NextResponse.json({ message: "Failed to add property" }, { status: 500 });
   }
 }
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);

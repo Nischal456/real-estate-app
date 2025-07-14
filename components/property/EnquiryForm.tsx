@@ -37,8 +37,9 @@ export function EnquiryForm({ property }: EnquiryFormProps) {
       if (!response.ok) throw new Error("Failed to send enquiry. Please try again.");
       setSuccess("Your enquiry has been sent successfully!");
       setSenderName(''); setSenderEmail(''); setSenderPhone('');
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
     } finally {
       setLoading(false);
     }
@@ -52,28 +53,13 @@ export function EnquiryForm({ property }: EnquiryFormProps) {
         </div>
         <div>
           <h3 className="text-lg font-semibold text-gray-800">{property.ownerName}</h3>
-          <p className="text-sm text-gray-500 flex items-center">
-            <Briefcase className="w-3.5 h-3.5 mr-1.5" />
-            {property.ownerRole || 'Owner / Agent'}
-          </p>
+          <p className="text-sm text-gray-500 flex items-center"><Briefcase className="w-3.5 h-3.5 mr-1.5" />{property.ownerRole || 'Owner / Agent'}</p>
         </div>
       </div>
-      
       <div className="space-y-2 mb-4">
-        {property.ownerPhoneNumber && (
-            <div className="flex items-center text-gray-800 p-3 bg-gray-50 rounded-md text-sm">
-                <Phone className="w-4 h-4 mr-3 text-[#3fa8e4]" />
-                <span className="font-semibold">{property.ownerPhoneNumber}</span>
-            </div>
-        )}
-        {property.ownerEmail && (
-            <div className="flex items-center text-gray-800 p-3 bg-gray-50 rounded-md text-sm">
-                <Mail className="w-4 h-4 mr-3 text-[#3fa8e4]" />
-                <span className="font-semibold">{property.ownerEmail}</span>
-            </div>
-        )}
+        {property.ownerPhoneNumber && (<div className="flex items-center text-gray-800 p-3 bg-gray-50 rounded-md text-sm"><Phone className="w-4 h-4 mr-3 text-[#3fa8e4]" /><span className="font-semibold">{property.ownerPhoneNumber}</span></div>)}
+        {property.ownerEmail && (<div className="flex items-center text-gray-800 p-3 bg-gray-50 rounded-md text-sm"><Mail className="w-4 h-4 mr-3 text-[#3fa8e4]" /><span className="font-semibold">{property.ownerEmail}</span></div>)}
       </div>
-
       <h4 className="font-semibold text-gray-700 mb-3 border-t pt-4">Contact For Enquiry</h4>
       <form onSubmit={handleSubmit} className="space-y-3">
         <input type="text" placeholder="Your full name" value={senderName} onChange={(e) => setSenderName(e.target.value)} required className="w-full p-3 border rounded-md focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" />

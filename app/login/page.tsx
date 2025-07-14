@@ -1,13 +1,13 @@
 'use client'; 
 
-import { useState, FormEvent } from 'react'; 
+import { useState, FormEvent, ChangeEvent } from 'react'; 
 import { useRouter } from 'next/navigation'; 
 import { 
   createUserWithEmailAndPassword, 
   signInWithEmailAndPassword, 
   updateProfile, 
   sendEmailVerification,
-  sendPasswordResetEmail // Import for password reset
+  sendPasswordResetEmail
 } from 'firebase/auth'; 
 import { auth, db } from '@/lib/firebase'; 
 import { doc, setDoc } from 'firebase/firestore'; 
@@ -17,8 +17,14 @@ import { Button } from '@/components/ui/Button';
 import { AlertCircle, CheckCircle, Loader2, Mail, Lock, User, Phone } from 'lucide-react'; 
 import { motion, AnimatePresence } from 'framer-motion'; 
 
-// A reusable input field component for a cleaner form structure 
-const InputField = ({ icon: Icon, type, value, onChange, placeholder, required = true }: any) => ( 
+const InputField = ({ icon: Icon, type, value, onChange, placeholder, required = true }: {
+  icon: React.ElementType;
+  type: string;
+  value: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  placeholder: string;
+  required?: boolean;
+}) => ( 
   <div className="relative"> 
     <Icon className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" /> 
     <input 
@@ -54,8 +60,9 @@ export default function LoginPage() {
     try {
       await sendPasswordResetEmail(auth, email);
       setSuccessMessage("Password reset link sent! Please check your inbox.");
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      const error = err as Error;
+      setError(error.message);
     } finally {
       setIsLoading(false);
     }
@@ -69,7 +76,6 @@ export default function LoginPage() {
 
     try { 
       if (isLogin) { 
-        // --- MODIFICATION: Removed the email verification check ---
         await signInWithEmailAndPassword(auth, email, password); 
         router.push('/'); 
       } else { 
@@ -89,9 +95,9 @@ export default function LoginPage() {
           phoneNumber: phoneNumber, 
           role: 'User' 
         }); 
-        await sendEmailVerification(user); // Still send for future use, but don't block
+        await sendEmailVerification(user); 
         setSuccessMessage("Account created! You can now log in."); 
-        setIsLogin(true); 
+        setIsLogin(true);
       } 
     } catch (err: any) { 
       const friendlyMessage = 
@@ -198,19 +204,19 @@ export default function LoginPage() {
                         transition={{ duration: 0.4, ease: 'easeInOut', when: 'beforeChildren', staggerChildren: 0.1 }} 
                       > 
                         <motion.div variants={itemVariants}> 
-                            <InputField icon={User} type="text" value={fullName} onChange={(e: any) => setFullName(e.target.value)} placeholder="Full Name" /> 
+                            <InputField icon={User} type="text" value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Full Name" /> 
                         </motion.div> 
                         <motion.div variants={itemVariants}> 
-                            <InputField icon={Phone} type="tel" value={phoneNumber} onChange={(e: any) => setPhoneNumber(e.target.value)} placeholder="Phone Number" /> 
+                            <InputField icon={Phone} type="tel" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="Phone Number" /> 
                         </motion.div> 
                       </motion.div> 
                     )} 
                   </AnimatePresence> 
                   <motion.div variants={itemVariants}> 
-                    <InputField icon={Mail} type="email" value={email} onChange={(e: any) => setEmail(e.target.value)} placeholder="Email Address" /> 
+                    <InputField icon={Mail} type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email Address" /> 
                   </motion.div> 
                   <motion.div variants={itemVariants} className="relative"> 
-                    <InputField icon={Lock} type="password" value={password} onChange={(e: any) => setPassword(e.target.value)} placeholder="Password" /> 
+                    <InputField icon={Lock} type="password" value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" /> 
                     {isLogin && (
                       <button type="button" onClick={handlePasswordReset} className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-semibold text-gray-500 hover:text-[#3fa8e4]">
                         Forgot?
@@ -236,4 +242,4 @@ export default function LoginPage() {
       <Footer /> 
     </> 
   ); 
-} 
+}
