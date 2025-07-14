@@ -1,9 +1,8 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
-// Handles fetching a single property by its ID. This is a public action.
 export async function GET(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   const { id } = params;
@@ -25,9 +24,8 @@ export async function GET(
   }
 }
 
-// Handles updating a single property by its ID. This is a secure action.
 export async function PUT(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -59,9 +57,8 @@ export async function PUT(
   }
 }
 
-// Handles deleting a single property by its ID. This is a secure action.
 export async function DELETE(
-  request: Request,
+  request: NextRequest,
   { params }: { params: { id: string } }
 ) {
   try {
@@ -81,7 +78,6 @@ export async function DELETE(
       return NextResponse.json({ message: "Property not found" }, { status: 404 });
     }
 
-    // Allow deletion if the user is the owner OR if the user is an admin
     if (docSnap.data()?.ownerId !== uid && !isAdmin) {
       return NextResponse.json({ message: "Forbidden: You do not have permission to delete this property." }, { status: 403 });
     }
