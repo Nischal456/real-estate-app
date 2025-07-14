@@ -84,7 +84,8 @@ export default function EditPropertyPage() {
 
     try {
       const docRef = doc(db, 'properties', id);
-      const { id: __, ...updateData } = property;
+      const updateData = { ...property };
+      delete updateData.id; // remove id before update to avoid eslint error
       await updateDoc(docRef, updateData);
       setSuccess('Property updated successfully!');
       setTimeout(() => router.push('/my-properties'), 1500);
