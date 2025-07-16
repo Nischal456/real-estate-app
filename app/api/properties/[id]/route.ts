@@ -1,13 +1,14 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
-// ✅ GET: Fetch property by ID
+// ✅ Correctly typed handler — don't worry about importing extra types
 export async function GET(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Record<string, string> }
 ) {
   try {
-    const id = context.params.id;
+    const id = params.id;
+
     if (!id) {
       return NextResponse.json({ message: 'Property ID is required.' }, { status: 400 });
     }
@@ -26,10 +27,9 @@ export async function GET(
   }
 }
 
-// ✅ PUT: Update property by ID
 export async function PUT(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Record<string, string> }
 ) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
@@ -40,7 +40,7 @@ export async function PUT(
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
-    const id = context.params.id;
+    const id = params.id;
     const propertyData = await req.json();
 
     const docRef = adminDb.collection('properties').doc(id);
@@ -63,10 +63,9 @@ export async function PUT(
   }
 }
 
-// ✅ DELETE: Delete property by ID
 export async function DELETE(
   req: Request,
-  context: { params: { id: string } }
+  { params }: { params: Record<string, string> }
 ) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
@@ -78,7 +77,7 @@ export async function DELETE(
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
-    const id = context.params.id;
+    const id = params.id;
     const docRef = adminDb.collection('properties').doc(id);
     const docSnap = await docRef.get();
 
