@@ -1,15 +1,18 @@
-import { NextResponse, NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
+// GET: Fetch property by ID
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) {
-  const { id } = params;
-  if (!id) {
-    return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
-  }
   try {
+    const id = context.params.id;
+
+    if (!id) {
+      return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
+    }
+
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
@@ -24,20 +27,23 @@ export async function GET(
   }
 }
 
+// PUT: Update property by ID
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) {
   try {
-    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    const token = request.headers.get("Authorization")?.split("Bearer ")[1];
     if (!token) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
-    const { id } = params;
+    const id = context.params.id;
     const propertyData = await request.json();
+
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
@@ -46,7 +52,7 @@ export async function PUT(
     }
 
     if (docSnap.data()?.ownerId !== uid) {
-      return NextResponse.json({ message: "Forbidden: You do not have permission to edit this property." }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await docRef.update(propertyData);
@@ -57,20 +63,23 @@ export async function PUT(
   }
 }
 
+// DELETE: Delete property by ID
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Record<string, string> }
 ) {
   try {
-    const token = request.headers.get('Authorization')?.split('Bearer ')[1];
+    const token = request.headers.get("Authorization")?.split("Bearer ")[1];
     if (!token) {
-      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
+
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
-    const { id } = params;
+    const id = context.params.id;
+
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
@@ -79,7 +88,7 @@ export async function DELETE(
     }
 
     if (docSnap.data()?.ownerId !== uid && !isAdmin) {
-      return NextResponse.json({ message: "Forbidden: You do not have permission to delete this property." }, { status: 403 });
+      return NextResponse.json({ message: "Forbidden" }, { status: 403 });
     }
 
     await docRef.delete();
