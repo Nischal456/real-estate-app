@@ -9,7 +9,7 @@ import { Property } from '@/types';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Edit, Trash2, Loader2, AlertCircle } from 'lucide-react';
-import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { Button } from '@/components/ui/Button';
 
@@ -33,16 +33,9 @@ export default function MyPropertiesPage() {
         try {
           const q = query(collection(db, "properties"), where("ownerId", "==", user.uid));
           const querySnapshot = await getDocs(q);
-          const userProperties: Property[] = querySnapshot.docs.map((doc) => {
-            const data = doc.data() as DocumentData;
-            return {
-              id: doc.id,
-              ...data,
-            } as Property;
-          });
+          const userProperties = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
           setProperties(userProperties);
-        } catch (err) {
-          console.error("Failed to fetch properties:", err);
+        } catch {
           setError("Failed to fetch your properties.");
         } finally {
           setLoading(false);
@@ -67,8 +60,7 @@ export default function MyPropertiesPage() {
       if (!response.ok) throw new Error("Failed to delete property.");
       setProperties(prev => prev.filter(p => p.id !== propertyId));
       alert("Property deleted successfully.");
-    } catch (err) {
-      console.error("Delete error:", err);
+    } catch {
       alert("Failed to delete property. Please try again.");
     }
   };
@@ -88,32 +80,22 @@ export default function MyPropertiesPage() {
             properties.map(prop => (
               <div key={prop.id} className="flex flex-col md:flex-row items-center bg-white p-4 rounded-lg shadow-md border gap-6">
                 <div className="relative w-full md:w-48 h-48 md:h-32 rounded-md overflow-hidden flex-shrink-0 bg-gray-100">
-                  {prop.featuredImageUrl ? (
-                    <Image src={prop.featuredImageUrl} alt={prop.title} layout="fill" objectFit="cover" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>
-                  )}
+                  {prop.featuredImageUrl ? (<Image src={prop.featuredImageUrl} alt={prop.title} layout="fill" objectFit="cover" />) : (<div className="w-full h-full flex items-center justify-center text-gray-400">No Image</div>)}
                 </div>
                 <div className="flex-grow text-center md:text-left">
                   <h2 className="text-xl font-semibold text-gray-800">{prop.title}</h2>
                   <p className="text-sm text-gray-500">{prop.location}</p>
                 </div>
                 <div className="flex items-center gap-4 flex-shrink-0 mt-4 md:mt-0">
-                  <Link href={`/edit-property/${prop.id}`} className="flex items-center gap-2 text-blue-600 hover:underline px-4 py-2 rounded-md hover:bg-blue-50 transition-colors">
-                    <Edit className="w-5 h-5" /> Edit
-                  </Link>
-                  <button onClick={() => handleDelete(prop.id)} className="flex items-center gap-2 text-red-600 hover:underline px-4 py-2 rounded-md hover:bg-red-50 transition-colors">
-                    <Trash2 className="w-5 h-5" /> Delete
-                  </button>
+                  <Link href={`/edit-property/${prop.id}`} className="flex items-center gap-2 text-blue-600 hover:underline px-4 py-2 rounded-md hover:bg-blue-50 transition-colors"><Edit className="w-5 h-5" /> Edit</Link>
+                  <button onClick={() => handleDelete(prop.id)} className="flex items-center gap-2 text-red-600 hover:underline px-4 py-2 rounded-md hover:bg-red-50 transition-colors"><Trash2 className="w-5 h-5" /> Delete</button>
                 </div>
               </div>
             ))
           ) : (
             <div className="text-center text-gray-500 py-10 border-2 border-dashed rounded-lg">
-              <p>You have not listed any properties yet.</p>
-              <Link href="/add-property">
-                <Button className="mt-4 bg-[#3fa8e4] hover:bg-[#3fa8e4]/90">List a Property</Button>
-              </Link>
+                <p>You have not listed any properties yet.</p>
+                <Link href="/add-property"><Button className="mt-4 bg-[#3fa8e4] hover:bg-[#3fa8e4]/90">List a Property</Button></Link>
             </div>
           )}
         </div>

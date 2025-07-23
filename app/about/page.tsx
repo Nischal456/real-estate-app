@@ -23,31 +23,21 @@ const values = [
 export default function AboutUsPage() {
   const [selectedMember, setSelectedMember] = useState<(typeof teamMembers)[0] | null>(null);
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: { opacity: 1, transition: { staggerChildren: 0.15 } },
-  };
-
-  const itemVariants = {
-    hidden: { y: 30, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.7, ease: 'easeOut' } },
-  };
-
   return (
     <div className="bg-gray-50 text-gray-800">
       <Header />
       
-      <motion.div initial="hidden" animate="visible" variants={containerVariants}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ staggerChildren: 0.15 }}>
         <motion.section className="relative h-[60vh] flex items-center justify-center text-center text-white overflow-hidden">
           <video autoPlay loop muted playsInline className="absolute z-0 w-auto min-w-full min-h-full max-w-none" style={{ objectFit: 'cover', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
             <source src="https://videos.pexels.com/video-files/3254009/3254009-hd.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-black/60"></div>
           <div className="relative z-10 p-4">
-            <motion.h1 variants={itemVariants} className="text-5xl md:text-7xl font-extrabold tracking-tight text-shadow-lg">
+            <motion.h1 initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7, ease: 'easeOut' }} className="text-5xl md:text-7xl font-extrabold tracking-tight text-shadow-lg">
               Our Story, Your Trust
             </motion.h1>
-            <motion.p variants={itemVariants} className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-200 text-shadow">
+            <motion.p initial={{ y: 30, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }} className="mt-4 text-lg md:text-xl max-w-3xl mx-auto text-gray-200 text-shadow">
               Building the future of real estate in Nepal, one property at a time.
             </motion.p>
           </div>
@@ -162,3 +152,4 @@ export default function AboutUsPage() {
     </div>
   );
 }
+

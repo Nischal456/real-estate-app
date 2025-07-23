@@ -16,19 +16,14 @@ interface EditInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   id: string;
 }
 
+// This component is now defined outside the main page component
 function FormInputForEdit({ label, id, ...props }: EditInputProps) {
-  return (
-    <div>
-      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">
-        {label}
-      </label>
-      <input
-        id={id}
-        className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]"
-        {...props}
-      />
-    </div>
-  );
+    return (
+      <div>
+        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <input id={id} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props} />
+      </div>
+    );
 }
 
 export default function EditPropertyPage() {
@@ -48,31 +43,27 @@ export default function EditPropertyPage() {
       router.push('/login');
       return;
     }
-
     const fetchProperty = async () => {
       try {
-        const docRef = doc(db, 'properties', id);
+        const docRef = doc(db, "properties", id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists() && docSnap.data().ownerId === user.uid) {
           setProperty({ id: docSnap.id, ...docSnap.data() });
         } else {
-          setError('Property not found or you do not have permission to edit it.');
+          setError("Property not found or you do not have permission to edit it.");
         }
-      } catch {
-        setError('Failed to fetch property data.');
+      } catch (fetchError) {
+        setError("Failed to fetch property data.");
       } finally {
         setLoading(false);
       }
     };
-
     if (id && user) {
       fetchProperty();
     }
   }, [id, user, router]);
 
-  const handleChange = (
-    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
-  ) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setProperty({ ...property, [e.target.name]: e.target.value });
   };
 
@@ -81,40 +72,27 @@ export default function EditPropertyPage() {
     setSaving(true);
     setError(null);
     setSuccess(null);
-
     try {
-      const docRef = doc(db, 'properties', id);
-      const updateData = { ...property };
-      delete updateData.id; // remove id before update to avoid eslint error
+      const docRef = doc(db, "properties", id);
+      const { id: propertyId, ...updateData } = property;
+      if (!propertyId) throw new Error("Property ID is missing.");
       await updateDoc(docRef, updateData);
-      setSuccess('Property updated successfully!');
+      setSuccess("Property updated successfully!");
       setTimeout(() => router.push('/my-properties'), 1500);
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message);
-      } else {
-        setError('An unknown error occurred while updating.');
-      }
+    } catch (updateError) {
+      const error = updateError as Error;
+      setError(error.message);
     } finally {
       setSaving(false);
     }
   };
 
   if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" />
-      </div>
-    );
+    return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" /></div>;
   }
-
+  
   if (error) {
-    return (
-      <div className="flex h-screen items-center justify-center text-red-500">
-        <AlertCircle className="w-8 h-8 mr-4" />
-        {error}
-      </div>
-    );
+    return <div className="flex h-screen items-center justify-center text-red-500"><AlertCircle className="w-8 h-8 mr-4"/>{error}</div>;
   }
 
   return (
@@ -124,39 +102,14 @@ export default function EditPropertyPage() {
         <div className="bg-white p-8 rounded-lg shadow-md">
           <h1 className="text-3xl font-bold text-gray-800 mb-6">Edit Property</h1>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <FormInputForEdit
-              name="title"
-              label="Listing Title"
-              value={property.title || ''}
-              onChange={handleChange}
-              required
-            />
-            <FormInputForEdit
-              name="location"
-              label="Location / Address"
-              value={property.location || ''}
-              onChange={handleChange}
-              required
-            />
-            <FormInputForEdit
-              name="price"
-              label="Price (NPR)"
-              type="number"
-              value={property.price || ''}
-              onChange={handleChange}
-              required
-            />
-            {success && (
-              <div className="text-green-600 flex items-center">
-                <CheckCircle className="w-4 h-4 mr-2" />
-                {success}
-              </div>
-            )}
-            <Button
-              type="submit"
-              disabled={saving}
-              className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90"
-            >
+            {/* --- THE FIX: Added the required 'id' prop to each component call --- */}
+            <FormInputForEdit id="title" name="title" label="Listing Title" value={property.title || ''} onChange={handleChange} required />
+            <FormInputForEdit id="location" name="location" label="Location / Address" value={property.location || ''} onChange={handleChange} required />
+            <FormInputForEdit id="price" name="price" label="Price (NPR)" type="number" value={property.price || ''} onChange={handleChange} required />
+            
+            {/* You would add the rest of your form fields here, following the same pattern */}
+            {success && <div className="text-green-600 flex items-center"><CheckCircle className="w-4 h-4 mr-2"/>{success}</div>}
+            <Button type="submit" disabled={saving} className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90">
               {saving ? <Loader2 className="animate-spin mx-auto" /> : 'Save Changes'}
             </Button>
           </form>
