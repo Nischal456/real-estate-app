@@ -1,15 +1,18 @@
+// FILE: app/api/properties/[id]/route.ts
+
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
-// Corrected the type for the second argument in all functions below
-// from { params: Record<string, string> } to { params: { id: string } }
+// This signature is correct for Next.js App Router
+type RouteParams = {
+  params: {
+    id: string;
+  };
+};
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function GET(req: Request, { params }: RouteParams) {
   try {
-    const id = params.id;
+    const { id } = params;
 
     if (!id) {
       return NextResponse.json({ message: 'Property ID is required.' }, { status: 400 });
@@ -29,10 +32,7 @@ export async function GET(
   }
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function PUT(req: Request, { params }: RouteParams) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
@@ -42,7 +42,7 @@ export async function PUT(
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
 
-    const id = params.id;
+    const { id } = params;
     const propertyData = await req.json();
 
     const docRef = adminDb.collection('properties').doc(id);
@@ -65,10 +65,7 @@ export async function PUT(
   }
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
+export async function DELETE(req: Request, { params }: RouteParams) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
@@ -79,7 +76,7 @@ export async function DELETE(
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
-    const id = params.id;
+    const { id } = params;
     const docRef = adminDb.collection('properties').doc(id);
     const docSnap = await docRef.get();
 
