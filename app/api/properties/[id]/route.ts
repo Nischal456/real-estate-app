@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
-// ✅ Correctly typed handler — don't worry about importing extra types
+// Corrected the type for the second argument in all functions below
+// from { params: Record<string, string> } to { params: { id: string } }
+
 export async function GET(
   req: Request,
-  { params }: { params: Record<string, string> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const id = params.id;
@@ -29,7 +31,7 @@ export async function GET(
 
 export async function PUT(
   req: Request,
-  { params }: { params: Record<string, string> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
@@ -65,7 +67,7 @@ export async function PUT(
 
 export async function DELETE(
   req: Request,
-  { params }: { params: Record<string, string> }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
