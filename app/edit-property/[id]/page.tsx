@@ -18,12 +18,12 @@ interface EditInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
 
 // This component is now defined outside the main page component
 function FormInputForEdit({ label, id, ...props }: EditInputProps) {
-    return (
-      <div>
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-        <input id={id} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props} />
-      </div>
-    );
+  return (
+    <div>
+      <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+      <input id={id} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props} />
+    </div>
+  );
 }
 
 export default function EditPropertyPage() {
@@ -53,6 +53,7 @@ export default function EditPropertyPage() {
           setError("Property not found or you do not have permission to edit it.");
         }
       } catch (fetchError) {
+        console.error("Failed to fetch property:", fetchError); // Use the variable
         setError("Failed to fetch property data.");
       } finally {
         setLoading(false);
@@ -90,9 +91,9 @@ export default function EditPropertyPage() {
   if (loading) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" /></div>;
   }
-  
+
   if (error) {
-    return <div className="flex h-screen items-center justify-center text-red-500"><AlertCircle className="w-8 h-8 mr-4"/>{error}</div>;
+    return <div className="flex h-screen items-center justify-center text-red-500"><AlertCircle className="w-8 h-8 mr-4" />{error}</div>;
   }
 
   return (
@@ -106,9 +107,9 @@ export default function EditPropertyPage() {
             <FormInputForEdit id="title" name="title" label="Listing Title" value={property.title || ''} onChange={handleChange} required />
             <FormInputForEdit id="location" name="location" label="Location / Address" value={property.location || ''} onChange={handleChange} required />
             <FormInputForEdit id="price" name="price" label="Price (NPR)" type="number" value={property.price || ''} onChange={handleChange} required />
-            
+
             {/* You would add the rest of your form fields here, following the same pattern */}
-            {success && <div className="text-green-600 flex items-center"><CheckCircle className="w-4 h-4 mr-2"/>{success}</div>}
+            {success && <div className="text-green-600 flex items-center"><CheckCircle className="w-4 h-4 mr-2" />{success}</div>}
             <Button type="submit" disabled={saving} className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90">
               {saving ? <Loader2 className="animate-spin mx-auto" /> : 'Save Changes'}
             </Button>
