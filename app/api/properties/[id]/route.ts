@@ -3,14 +3,12 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
-// This signature is correct for Next.js App Router
-type RouteParams = {
-  params: {
-    id: string;
-  };
-};
+// The type { params: { id: string } } is now written directly in each function.
 
-export async function GET(req: Request, { params }: RouteParams) {
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const { id } = params;
 
@@ -32,7 +30,10 @@ export async function GET(req: Request, { params }: RouteParams) {
   }
 }
 
-export async function PUT(req: Request, { params }: RouteParams) {
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
@@ -65,7 +66,10 @@ export async function PUT(req: Request, { params }: RouteParams) {
   }
 }
 
-export async function DELETE(req: Request, { params }: RouteParams) {
+export async function DELETE(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
   try {
     const token = req.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
