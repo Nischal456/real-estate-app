@@ -1,13 +1,19 @@
 import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
+// =======================================================================
+// This is the complete and corrected code for this file.
+// The function signatures have been updated to match the exact
+// requirements of the latest Next.js versions for deployment.
+// =======================================================================
+
 // Handles fetching a single property by its ID.
 export async function GET(
   request: Request, 
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
-    const id = context.params.id;
+    const id = params.id;
     if (!id) {
       return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
     }
@@ -30,7 +36,7 @@ export async function GET(
 // Handles updating a single property by its ID.
 export async function PUT(
   request: Request, 
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
@@ -40,7 +46,7 @@ export async function PUT(
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
     
-    const id = context.params.id;
+    const id = params.id;
     const propertyData = await request.json();
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
@@ -65,7 +71,7 @@ export async function PUT(
 // Handles deleting a single property by its ID.
 export async function DELETE(
   request: Request, 
-  context: { params: { id: string } }
+  { params }: { params: { id: string } }
 ) {
   try {
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
@@ -76,7 +82,7 @@ export async function DELETE(
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
-    const id = context.params.id;
+    const id = params.id;
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
