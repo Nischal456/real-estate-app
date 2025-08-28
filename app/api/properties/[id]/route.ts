@@ -1,15 +1,15 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
 // =======================================================================
 // This is the complete and corrected code for this file.
-// The function signatures have been updated to match the exact
-// requirements of the latest Next.js versions for deployment.
+// The function signatures have been updated to use NextRequest, which
+// provides the exact type information needed by the Vercel build server.
 // =======================================================================
 
 // Handles fetching a single property by its ID.
 export async function GET(
-  request: Request, 
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
@@ -35,7 +35,7 @@ export async function GET(
 
 // Handles updating a single property by its ID.
 export async function PUT(
-  request: Request, 
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
@@ -70,7 +70,7 @@ export async function PUT(
 
 // Handles deleting a single property by its ID.
 export async function DELETE(
-  request: Request, 
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
