@@ -137,7 +137,7 @@ export function Header() {
                   </div>
                 ) : (
                   <Link href="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" className="w-full rounded-full text-base py-3">
+                    <Button variant="outline" className="w-full rounded-full text-base py-8">
                       Login / Signup
                     </Button>
                   </Link>
