@@ -27,10 +27,11 @@ export default function AboutUsPage() {
     <div className="bg-gray-50 text-gray-800">
       <Header />
       
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ staggerChildren: 0.15 }}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5 }}>
+        {/* HERO SECTION with Video Background */}
         <motion.section className="relative h-[60vh] flex items-center justify-center text-center text-white overflow-hidden">
           <video autoPlay loop muted playsInline className="absolute z-0 w-auto min-w-full min-h-full max-w-none" style={{ objectFit: 'cover', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}>
-            <source src="https://videos.pexels.com/video-files/3254009/3254009-hd.mp4" type="video/mp4" />
+            <source src="https://videos.pexels.com/video-files/853870/853870-hd.mp4" type="video/mp4" />
           </video>
           <div className="absolute inset-0 bg-black/60"></div>
           <div className="relative z-10 p-4">
@@ -152,4 +153,3 @@ export default function AboutUsPage() {
     </div>
   );
 }
-

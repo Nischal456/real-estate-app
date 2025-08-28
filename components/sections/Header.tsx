@@ -8,7 +8,7 @@ import { useAuth } from '@/context/AuthContext';
 import { ProfileDropdown } from '@/components/ui/ProfileDropdown';
 import { NotificationBell } from '@/components/ui/NotificationBell';
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 export function Header() {
   const { user } = useAuth();
@@ -29,20 +29,8 @@ export function Header() {
     { href: '/contact', label: 'Contact' },
   ];
 
-  const linkVariants = {
-    hidden: { y: -20, opacity: 0 },
-    visible: (i) => ({
-      y: 0,
-      opacity: 1,
-      transition: {
-        delay: i * 0.1 + 0.3,
-        type: 'spring',
-        stiffness: 120,
-      },
-    }),
-  };
-
-  const mobileMenuVariants = {
+  // --- THE FIX: Added the 'Variants' type from framer-motion ---
+  const mobileMenuVariants: Variants = {
     hidden: { opacity: 0, y: -20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeInOut' } },
     exit: { opacity: 0, y: -20, transition: { duration: 0.3, ease: 'easeInOut' } },
@@ -64,7 +52,7 @@ export function Header() {
 
           <div className="hidden lg:flex items-center space-x-2">
             {navLinks.map((link, i) => (
-              <motion.div key={link.href} custom={i} initial="hidden" animate="visible" variants={linkVariants}>
+              <motion.div key={link.href} custom={i} initial={{ y: -20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: i * 0.1 + 0.3, type: 'spring', stiffness: 120 }}>
                 <Link
                   href={link.href}
                   className="text-gray-700 font-medium px-4 py-2 rounded-full transition-all duration-300 hover:text-white hover:bg-[#3fa8e4]"
@@ -94,7 +82,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login">
-                <Button variant="outline" className="rounded-full border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 transition-colors">
+                <Button variant="outline" className="rounded-full">
                   Login / Signup
                 </Button>
               </Link>
@@ -113,54 +101,52 @@ export function Header() {
         </nav>
       </header>
 
-      {/* Mobile Menu */}
-      {/* Mobile Menu */}
-<AnimatePresence>
-  {isMenuOpen && (
-    <motion.div
-      key="mobile-menu" // <-- ADD THIS LINE
-      variants={mobileMenuVariants}
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      className="lg:hidden fixed inset-0 top-16 bg-white/95 backdrop-blur-xl z-40 p-6"
-    >
-      <div className="flex flex-col space-y-6 mt-6">
-        {navLinks.map((link) => (
-          <Link
-            key={link.href}
-            href={link.href}
-            className="text-gray-800 text-lg font-semibold text-center py-3 rounded-lg hover:bg-[#3fa8e4]/10 transition-colors"
-            onClick={() => setIsMenuOpen(false)}
+      <AnimatePresence>
+        {isMenuOpen && (
+          <motion.div
+            key="mobile-menu"
+            variants={mobileMenuVariants}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="lg:hidden fixed inset-0 top-16 bg-white/95 backdrop-blur-xl z-40 p-6"
           >
-            {link.label}
-          </Link>
-        ))}
-        <hr />
-        <div className="flex flex-col items-center space-y-4 pt-4">
-          <Link href="/add-property" className="w-full" onClick={() => setIsMenuOpen(false)}>
-            <Button className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90 text-white font-semibold rounded-full py-3 text-base">
-              Post Property
-            </Button>
-          </Link>
+            <div className="flex flex-col space-y-6 mt-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className="text-gray-800 text-lg font-semibold text-center py-3 rounded-lg hover:bg-[#3fa8e4]/10 transition-colors"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {link.label}
+                </Link>
+              ))}
+              <hr />
+              <div className="flex flex-col items-center space-y-4 pt-4">
+                <Link href="/add-property" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                  <Button className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90 text-white font-semibold rounded-full py-3 text-base">
+                    Post Property
+                  </Button>
+                </Link>
 
-          {user ? (
-            <div className="flex items-center justify-center space-x-6 pt-4">
-              <NotificationBell />
-              <ProfileDropdown />
+                {user ? (
+                  <div className="flex items-center justify-center space-x-6 pt-4">
+                    <NotificationBell />
+                    <ProfileDropdown />
+                  </div>
+                ) : (
+                  <Link href="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
+                    <Button variant="outline" className="w-full rounded-full text-base py-3">
+                      Login / Signup
+                    </Button>
+                  </Link>
+                )}
+              </div>
             </div>
-          ) : (
-            <Link href="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
-              <Button variant="outline" className="w-full rounded-full text-base py-3">
-                Login / Signup
-              </Button>
-            </Link>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  )}
-</AnimatePresence>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

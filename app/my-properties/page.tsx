@@ -35,7 +35,7 @@ export default function MyPropertiesPage() {
           const querySnapshot = await getDocs(q);
           const userProperties = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Property[];
           setProperties(userProperties);
-        } catch {
+        } catch (err) {
           setError("Failed to fetch your properties.");
         } finally {
           setLoading(false);
@@ -60,7 +60,7 @@ export default function MyPropertiesPage() {
       if (!response.ok) throw new Error("Failed to delete property.");
       setProperties(prev => prev.filter(p => p.id !== propertyId));
       alert("Property deleted successfully.");
-    } catch {
+    } catch (err) {
       alert("Failed to delete property. Please try again.");
     }
   };

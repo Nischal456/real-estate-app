@@ -33,7 +33,7 @@ async function getProperty(id: string): Promise<Property | null> {
       }
     }
     
-    // Safely construct the final property object
+    // Safely construct the final property object to ensure type safety
     const finalProperty: Property = {
       id: propertyDocSnap.id,
       title: propertyData.title || '',
@@ -49,7 +49,7 @@ async function getProperty(id: string): Promise<Property | null> {
       ownerName: ownerDetails.displayName || propertyData.ownerName || 'Anonymous',
       ownerPhotoUrl: ownerDetails.photoURL || propertyData.ownerPhotoUrl || null,
       ownerPhoneNumber: ownerDetails.phoneNumber || propertyData.ownerPhoneNumber,
-      ownerEmail: ownerDetails.email || undefined,
+      ownerEmail: ownerDetails.email || undefined, // Correctly handle null/undefined
       ownerRole: ownerDetails.role || 'User',
       beds: propertyData.beds,
       baths: propertyData.baths,
