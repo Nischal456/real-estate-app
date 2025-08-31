@@ -3,16 +3,17 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
 // =======================================================================
 // This is the complete and final corrected code for this file.
-// We are now manually extracting the ID from the URL to bypass the
-// persistent Next.js build error. This will fix the deployment issue.
+// The function signatures have been simplified to the most standard
+// format to resolve the persistent deployment error.
 // =======================================================================
 
 // Handles fetching a single property by its ID.
-export async function GET(request: Request) {
+export async function GET(
+  request: Request, 
+  { params }: { params: { id: string } }
+) {
   try {
-    const url = new URL(request.url);
-    const id = url.pathname.split('/').pop();
-
+    const { id } = params;
     if (!id) {
       return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
     }
@@ -33,11 +34,11 @@ export async function GET(request: Request) {
 }
 
 // Handles updating a single property by its ID.
-export async function PUT(request: Request) {
+export async function PUT(
+  request: Request, 
+  { params }: { params: { id: string } }
+) {
   try {
-    const url = new URL(request.url);
-    const id = url.pathname.split('/').pop();
-    
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -45,10 +46,7 @@ export async function PUT(request: Request) {
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
     
-    if (!id) {
-      return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
-    }
-    
+    const { id } = params;
     const propertyData = await request.json();
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
@@ -69,12 +67,13 @@ export async function PUT(request: Request) {
   }
 }
 
-// Handles deleting a single property by its ID.
-export async function DELETE(request: Request) {
-  try {
-    const url = new URL(request.url);
-    const id = url.pathname.split('/').pop();
 
+// Handles deleting a single property by its ID.
+export async function DELETE(
+  request: Request, 
+  { params }: { params: { id: string } }
+) {
+  try {
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -83,10 +82,7 @@ export async function DELETE(request: Request) {
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
-    if (!id) {
-      return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
-    }
-
+    const { id } = params;
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
