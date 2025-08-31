@@ -5,8 +5,7 @@ import { formatNpr } from '@/lib/utils';
 import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle } from 'lucide-react';
 import { ImageGallery } from '@/components/property/ImageGallery';
 import { EnquiryForm } from '@/components/property/EnquiryForm';
-import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { adminDb } from '@/lib/firebase-admin'; // Use the Admin SDK for server-side fetching
 
 const RoadIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
@@ -16,25 +15,24 @@ const RoadIcon = () => (
 
 async function getProperty(id: string): Promise<Property | null> {
   try {
-    const propertyDocRef = doc(db, "properties", id);
-    const propertyDocSnap = await getDoc(propertyDocRef);
-    if (!propertyDocSnap.exists()) return null;
+    const propertyDocRef = adminDb.collection("properties").doc(id);
+    const propertyDocSnap = await propertyDocRef.get();
+    if (!propertyDocSnap.exists) return null;
     
-    const propertyData = propertyDocSnap.data();
+    const propertyData = propertyDocSnap.data()!;
     const ownerId = propertyData.ownerId;
 
     let ownerDetails: Partial<UserProfile> = {};
 
     if (ownerId) {
-      const userDocRef = doc(db, "users", ownerId);
-      const userDocSnap = await getDoc(userDocRef);
-      if (userDocSnap.exists()) {
+      const userDocRef = adminDb.collection("users").doc(ownerId);
+      const userDocSnap = await userDocRef.get();
+      if (userDocSnap.exists) {
         ownerDetails = userDocSnap.data() as UserProfile;
       }
     }
     
-    // Safely construct the final property object to ensure type safety
-    const finalProperty: Property = {
+    return {
       id: propertyDocSnap.id,
       title: propertyData.title || '',
       description: propertyData.description || '',
@@ -49,7 +47,7 @@ async function getProperty(id: string): Promise<Property | null> {
       ownerName: ownerDetails.displayName || propertyData.ownerName || 'Anonymous',
       ownerPhotoUrl: ownerDetails.photoURL || propertyData.ownerPhotoUrl || null,
       ownerPhoneNumber: ownerDetails.phoneNumber || propertyData.ownerPhoneNumber,
-      ownerEmail: ownerDetails.email || undefined, // Correctly handle null/undefined
+      ownerEmail: ownerDetails.email || undefined,
       ownerRole: ownerDetails.role || 'User',
       beds: propertyData.beds,
       baths: propertyData.baths,
@@ -60,9 +58,8 @@ async function getProperty(id: string): Promise<Property | null> {
       roadAccess: propertyData.roadAccess,
       roadWidth: propertyData.roadWidth,
     };
-    
-    return finalProperty;
-  } catch {
+  } catch (error) {
+    console.error("Direct fetch failed:", error);
     return null;
   }
 }

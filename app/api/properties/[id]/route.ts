@@ -1,41 +1,9 @@
-import { NextResponse } from 'next/server';
+import { NextResponse, NextRequest } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
-
-// =======================================================================
-// This is the complete and final corrected code for this file.
-// The function signatures have been simplified to the most standard
-// format to resolve the persistent deployment error.
-// =======================================================================
-
-// Handles fetching a single property by its ID.
-export async function GET(
-  request: Request, 
-  { params }: { params: { id: string } }
-) {
-  try {
-    const { id } = params;
-    if (!id) {
-      return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
-    }
-    const docRef = adminDb.collection("properties").doc(id);
-    const docSnap = await docRef.get();
-
-    if (!docSnap.exists) {
-      return NextResponse.json({ message: "Property not found" }, { status: 404 });
-    }
-
-    const property = { id: docSnap.id, ...docSnap.data() };
-    return NextResponse.json(property, { status: 200 });
-
-  } catch (error) {
-    console.error("Error fetching property:", error);
-    return NextResponse.json({ message: "Failed to fetch property" }, { status: 500 });
-  }
-}
 
 // Handles updating a single property by its ID.
 export async function PUT(
-  request: Request, 
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
@@ -46,7 +14,7 @@ export async function PUT(
     const decodedToken = await adminAuth.verifyIdToken(token);
     const uid = decodedToken.uid;
     
-    const { id } = params;
+    const id = params.id;
     const propertyData = await request.json();
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
@@ -70,7 +38,7 @@ export async function PUT(
 
 // Handles deleting a single property by its ID.
 export async function DELETE(
-  request: Request, 
+  request: NextRequest, 
   { params }: { params: { id: string } }
 ) {
   try {
@@ -82,7 +50,7 @@ export async function DELETE(
     const uid = decodedToken.uid;
     const isAdmin = decodedToken.admin === true;
 
-    const { id } = params;
+    const id = params.id;
     const docRef = adminDb.collection("properties").doc(id);
     const docSnap = await docRef.get();
 
