@@ -6,10 +6,9 @@ import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle } from 'lucide-re
 import { ImageGallery } from '@/components/property/ImageGallery';
 import { EnquiryForm } from '@/components/property/EnquiryForm';
 import { adminDb } from '@/lib/firebase-admin'; // Use the Admin SDK for server-side fetching
-import Image from 'next/image';
 
 const RoadIcon = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
       <path d="M4 17l4-12" /><path d="M20 5l-4 12" /><path d="M16 5h4" /><path d="M4 17h4" />
     </svg>
 );

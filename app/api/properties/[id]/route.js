@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 
 // Handles fetching a single property by its ID.
-// @ts-ignore
 export async function GET(request, { params }) {
   try {
     const { id } = params;
@@ -26,7 +25,6 @@ export async function GET(request, { params }) {
 }
 
 // Handles updating a single property by its ID.
-// @ts-ignore
 export async function PUT(request, { params }) {
   try {
     const { id } = params;
@@ -57,9 +55,7 @@ export async function PUT(request, { params }) {
   }
 }
 
-
 // Handles deleting a single property by its ID.
-// @ts-ignore
 export async function DELETE(request, { params }) {
   try {
     const { id } = params;
