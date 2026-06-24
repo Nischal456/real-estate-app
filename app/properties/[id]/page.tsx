@@ -2,10 +2,11 @@ import { Header } from '@/components/sections/Header';
 import { Footer } from '@/components/sections/Footer';
 import { Property, UserProfile } from '@/types';
 import { formatNpr } from '@/lib/utils';
-import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle } from 'lucide-react';
+import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle, Phone } from 'lucide-react';
 import { ImageGallery } from '@/components/property/ImageGallery';
 import { EnquiryForm } from '@/components/property/EnquiryForm';
-import { adminDb } from '@/lib/firebase-admin'; // Use the Admin SDK for server-side fetching
+import { adminDb } from '@/lib/firebase-admin';
+import Image from 'next/image';
 
 const RoadIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
@@ -77,9 +78,12 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: stri
     );
 }
 
-export default async function PropertyDetailPage({ params }: { params: { id: string } }) {
+export default async function PropertyDetailPage(props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const { id } = params;
+  
   const property = await getProperty(id);
+
   if (!property) {
     return (
       <>
@@ -92,7 +96,9 @@ export default async function PropertyDetailPage({ params }: { params: { id: str
       </>
     );
   }
+  
   const priceDisplay = property.status === 'For Rent' ? `${formatNpr(property.price)} / month` : `Rs. ${formatNpr(property.price)}`;
+  
   return (
     <div className="bg-gray-50">
       <Header />
