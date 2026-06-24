@@ -7,21 +7,21 @@ import { db } from '@/lib/firebase';
 import { collection, query, where, onSnapshot, orderBy, doc, updateDoc, writeBatch } from 'firebase/firestore';
 import { EnquiryNotification } from '@/types';
 import { useRouter } from 'next/navigation';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, Variants } from 'framer-motion';
 
 // Animation variants for the main dropdown panel
-const dropdownVariants = {
+const dropdownVariants: Variants = {
   hidden: { opacity: 0, scale: 0.9, y: -20 },
   visible: { opacity: 1, scale: 1, y: 0, transition: { type: 'spring', stiffness: 400, damping: 25 } },
   exit: { opacity: 0, scale: 0.9, y: -20, transition: { duration: 0.2 } },
 };
 
 // Variants for staggering the list items
-const listVariants = {
+const listVariants: Variants = {
   visible: { transition: { staggerChildren: 0.07 } },
 };
 
-const itemVariants = {
+const itemVariants: Variants = {
   hidden: { opacity: 0, x: -20 },
   visible: { opacity: 1, x: 0 },
 };

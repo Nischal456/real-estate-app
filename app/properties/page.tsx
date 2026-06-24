@@ -13,10 +13,19 @@ async function getFilteredProperties(searchParams: { [key: string]: string | str
     const location = searchParams.location;
     const status = searchParams.status;
 
+    const minPrice = searchParams.minPrice;
+    const maxPrice = searchParams.maxPrice;
+    const beds = searchParams.beds;
+    const baths = searchParams.baths;
+
     if (query && typeof query === 'string') params.append('query', query);
     if (type && typeof type === 'string') params.append('type', type);
     if (location && typeof location === 'string') params.append('location', location);
     if (status && typeof status === 'string') params.append('status', status);
+    if (minPrice && typeof minPrice === 'string') params.append('minPrice', minPrice);
+    if (maxPrice && typeof maxPrice === 'string') params.append('maxPrice', maxPrice);
+    if (beds && typeof beds === 'string') params.append('beds', beds);
+    if (baths && typeof baths === 'string') params.append('baths', baths);
     
     const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/properties?${params.toString()}`, { 
       cache: 'no-store' 
@@ -37,7 +46,8 @@ function PropertiesPageSkeleton() {
     return <div className="text-center py-20"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4] mx-auto" /></div>;
 }
 
-export default async function PropertiesPage({ searchParams }: { searchParams: { [key:string]: string | string[] | undefined } }) {
+export default async function PropertiesPage(props: { searchParams: Promise<{ [key:string]: string | string[] | undefined }> }) {
+  const searchParams = await props.searchParams;
   const properties = await getFilteredProperties(searchParams);
 
   return (

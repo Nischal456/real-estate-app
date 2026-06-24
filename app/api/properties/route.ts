@@ -1,6 +1,4 @@
 import { NextResponse } from 'next/server';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { v2 as cloudinary } from 'cloudinary';
 import sharp from 'sharp';
@@ -75,14 +73,27 @@ export async function GET(request: Request) {
     const type = searchParams.get('type');
     const location = searchParams.get('location')?.toLowerCase().trim();
     const status = searchParams.get('status');
-    const querySnapshot = await getDocs(collection(db, "properties"));
+    const minPrice = searchParams.get('minPrice');
+    const maxPrice = searchParams.get('maxPrice');
+    const beds = searchParams.get('beds');
+    const baths = searchParams.get('baths');
+
+    const querySnapshot = await adminDb.collection("properties").get();
     const allProperties: Property[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Property);
     const filteredProperties = allProperties.filter(p => {
       const statusMatch = !status || p.status === status;
       const typeMatch = !type || p.propertyType === type;
       const locationMatch = !location || (p.location && p.location.toLowerCase().includes(location));
       const queryMatch = !query || (p.title && p.title.toLowerCase().includes(query)) || (p.description && p.description.toLowerCase().includes(query));
-      return statusMatch && typeMatch && locationMatch && queryMatch;
+      
+      const priceVal = parseFloat(p.price);
+      const minPriceMatch = !minPrice || isNaN(priceVal) || priceVal >= parseFloat(minPrice);
+      const maxPriceMatch = !maxPrice || isNaN(priceVal) || priceVal <= parseFloat(maxPrice);
+      
+      const bedsMatch = !beds || parseInt(p.beds || '0') >= parseInt(beds);
+      const bathsMatch = !baths || parseInt(p.baths || '0') >= parseInt(baths);
+
+      return statusMatch && typeMatch && locationMatch && queryMatch && minPriceMatch && maxPriceMatch && bedsMatch && bathsMatch;
     });
     const sortedProperties = filteredProperties.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
     return NextResponse.json(sortedProperties, { status: 200 });

@@ -7,7 +7,7 @@ import { formatNpr } from '@/lib/utils';
 import { MapPin, BedDouble, Bath, Ruler, Landmark, CheckCircle } from 'lucide-react';
 import { ImageGallery } from '@/components/property/ImageGallery';
 import { EnquiryForm } from '@/components/property/EnquiryForm';
-import { motion } from 'framer-motion';
+import { motion, Variants } from 'framer-motion';
 
 const RoadIcon = () => (
     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-500 flex-shrink-0">
@@ -33,7 +33,7 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: stri
 }
 
 // Animation variants for sections that appear on scroll
-const sectionVariants = {
+const sectionVariants: Variants = {
     hidden: { opacity: 0, y: 30 },
     visible: { 
         opacity: 1, 
@@ -43,7 +43,7 @@ const sectionVariants = {
     }
 };
 
-const staggerContainer = {
+const staggerContainer: Variants = {
     hidden: { opacity: 0 },
     visible: {
         opacity: 1,
@@ -53,7 +53,7 @@ const staggerContainer = {
     }
 };
 
-const staggerItem = {
+const staggerItem: Variants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
 };

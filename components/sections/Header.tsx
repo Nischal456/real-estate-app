@@ -70,7 +70,7 @@ export function Header() {
             transition={{ duration: 0.5, delay: 0.5 }}
           >
             <Link href="/add-property">
-              <Button className="bg-[#3fa8e4] hover:bg-[#3fa8e4]/90 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 duration-300">
+              <Button>
                 Post Property
               </Button>
             </Link>
@@ -82,7 +82,7 @@ export function Header() {
               </div>
             ) : (
               <Link href="/login">
-                <Button variant="outline" className="rounded-full">
+                <Button variant="outline">
                   Login / Signup
                 </Button>
               </Link>
@@ -125,7 +125,7 @@ export function Header() {
               <hr />
               <div className="flex flex-col items-center space-y-4 pt-4">
                 <Link href="/add-property" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                  <Button className="w-full bg-[#3fa8e4] hover:bg-[#3fa8e4]/90 text-white font-semibold rounded-full py-3 text-base">
+                  <Button className="w-full py-3 text-base">
                     Post Property
                   </Button>
                 </Link>
@@ -137,7 +137,7 @@ export function Header() {
                   </div>
                 ) : (
                   <Link href="/login" className="w-full" onClick={() => setIsMenuOpen(false)}>
-                    <Button variant="outline" className="w-full rounded-full text-base py-8">
+                    <Button variant="outline" className="w-full py-3 text-base">
                       Login / Signup
                     </Button>
                   </Link>

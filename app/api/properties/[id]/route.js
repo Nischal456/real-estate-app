@@ -4,7 +4,7 @@ import { adminDb, adminAuth } from '@/lib/firebase-admin';
 // Handles fetching a single property by its ID.
 export async function GET(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     if (!id) {
       return NextResponse.json({ message: "Property ID is required." }, { status: 400 });
     }
@@ -27,7 +27,7 @@ export async function GET(request, { params }) {
 // Handles updating a single property by its ID.
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
@@ -58,7 +58,7 @@ export async function PUT(request, { params }) {
 // Handles deleting a single property by its ID.
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const token = request.headers.get('Authorization')?.split('Bearer ')[1];
     if (!token) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });

@@ -14,27 +14,29 @@ import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
-  id: string;
+  id?: string;
 }
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label: string;
-  id: string;
+  id?: string;
   children: React.ReactNode;
 }
 
 function FormInput({ label, id, ...props }: InputProps) {
+    const inputId = id || props.name;
     return (
       <div>
-        <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-        <input id={id} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props} />
+        <label htmlFor={inputId} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <input id={inputId} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props} />
       </div>
     );
 }
 function FormSelect({ label, id, children, ...props }: SelectProps) {
+    const selectId = id || props.name;
     return (
         <div>
-            <label htmlFor={id} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
-            <select id={id} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props}>
+            <label htmlFor={selectId} className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+            <select id={selectId} className="w-full p-3 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-[#3fa8e4]" {...props}>
                 {children}
             </select>
         </div>
