@@ -7,14 +7,17 @@ import {
   signInWithEmailAndPassword,
   updateProfile,
   sendEmailVerification,
-  sendPasswordResetEmail
+  sendPasswordResetEmail,
+  GoogleAuthProvider,
+  signInWithPopup,
+  User as FirebaseUser
 } from 'firebase/auth';
 import { auth, db } from '@/lib/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { Header } from '@/components/sections/Header';
 import { Footer } from '@/components/sections/Footer';
 import { Button } from '@/components/ui/Button';
-import { AlertCircle, CheckCircle, Loader2, Mail, Lock, User, Phone } from 'lucide-react';
+import { AlertCircle, CheckCircle, Loader2, Mail, Lock, User, Phone, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 // A reusable input field component for a cleaner form structure 
@@ -48,6 +51,13 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Google sign in states
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [googleUser, setGoogleUser] = useState<FirebaseUser | null>(null);
+  const [googlePhone, setGooglePhone] = useState('');
+  const [showResend, setShowResend] = useState(false);
+
   const router = useRouter();
 
   const handlePasswordReset = async () => {
@@ -69,15 +79,121 @@ export default function LoginPage() {
     }
   };
 
+  const handleResendVerification = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsLoading(true);
+    try {
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      await sendEmailVerification(userCredential.user);
+      await auth.signOut();
+      setSuccessMessage("Verification email resent! Please check your inbox.");
+      setShowResend(false);
+    } catch (err) {
+      let msg = "Failed to resend verification email.";
+      if (err instanceof Error) {
+        msg = err.message;
+      }
+      setError(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setSuccessMessage(null);
+    setIsLoading(true);
+    
+    try {
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+
+      // Check if user exists in Firestore
+      const userDocRef = doc(db, "users", user.uid);
+      const userDocSnap = await getDoc(userDocRef);
+
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data();
+        if (userData?.phoneNumber) {
+          router.push('/');
+        } else {
+          setGoogleUser(user);
+          setShowPhoneModal(true);
+        }
+      } else {
+        setGoogleUser(user);
+        setShowPhoneModal(true);
+      }
+    } catch (err) {
+      console.error("Google Sign-In Error:", err);
+      let friendlyMessage = "Failed to sign in with Google.";
+      if (err && typeof err === 'object' && 'code' in err) {
+        const fbErr = err as { code: string };
+        if (fbErr.code === 'auth/popup-closed-by-user') {
+          friendlyMessage = "Google sign-in popup was closed.";
+        }
+      }
+      setError(friendlyMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePhoneSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!googleUser) return;
+    
+    const cleanPhone = googlePhone.replace(/[\s-()]/g, '');
+    if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+      setError("Please enter a valid phone number (between 7 to 15 digits).");
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      await setDoc(doc(db, "users", googleUser.uid), {
+        uid: googleUser.uid,
+        displayName: googleUser.displayName || 'Google User',
+        email: googleUser.email,
+        photoURL: googleUser.photoURL,
+        phoneNumber: googlePhone,
+        role: 'User'
+      });
+      
+      setShowPhoneModal(false);
+      router.push('/');
+    } catch (err) {
+      console.error(err);
+      setError("Failed to complete profile registration.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
     setSuccessMessage(null);
+    setShowResend(false);
     setIsLoading(true);
 
     try {
       if (isLogin) {
-        await signInWithEmailAndPassword(auth, email, password);
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        const user = userCredential.user;
+        
+        if (!user.emailVerified) {
+          setError("Your email address is not verified. Please verify it before logging in.");
+          setShowResend(true);
+          await auth.signOut();
+          setIsLoading(false);
+          return;
+        }
+
         router.push('/');
       } else {
         if (!fullName || !phoneNumber) {
@@ -85,6 +201,14 @@ export default function LoginPage() {
           setIsLoading(false);
           return;
         }
+        
+        const cleanPhone = phoneNumber.replace(/[\s-()]/g, '');
+        if (cleanPhone.length < 7 || cleanPhone.length > 15) {
+          setError("Please enter a valid phone number (between 7 to 15 digits).");
+          setIsLoading(false);
+          return;
+        }
+
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
         await updateProfile(user, { displayName: fullName });
@@ -97,18 +221,18 @@ export default function LoginPage() {
           role: 'User'
         });
         await sendEmailVerification(user);
-        setSuccessMessage("Account created! You can now log in.");
+        await auth.signOut();
+        setSuccessMessage("Account created! A verification link was sent to your email. Please verify it before logging in.");
         setIsLogin(true);
       }
-    } catch (err) { // Step 1: Remove ": any"
-      // Step 2: Add a type check to safely access 'err.code'
+    } catch (err) {
       let friendlyMessage = "An unexpected error occurred. Please try again.";
       if (typeof err === 'object' && err !== null && 'code' in err) {
-        const firebaseError = err as { code: string }; // Type assertion after check
+        const firebaseError = err as { code: string };
         switch (firebaseError.code) {
           case 'auth/user-not-found':
-          case 'auth/invalid-credential': // More modern Firebase code
-          case 'auth/wrong-password': // Older Firebase code
+          case 'auth/invalid-credential':
+          case 'auth/wrong-password':
             friendlyMessage = "Invalid email or password.";
             break;
           case 'auth/email-already-in-use':
@@ -125,9 +249,48 @@ export default function LoginPage() {
   return (
     <>
       <Header />
-      <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4" style={{
+      <main className="min-h-screen flex items-center justify-center bg-gray-100 p-4 relative" style={{
         backgroundImage: "url('https://www.transparenttextures.com/patterns/cubes.png')"
       }}>
+        
+        {/* Google Sign-In Phone Modal */}
+        <AnimatePresence>
+          {showPhoneModal && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full border border-gray-100 relative text-left"
+              >
+                <div className="mx-auto w-12 h-12 bg-[#3fa8e4]/10 text-[#3fa8e4] rounded-full flex items-center justify-center mb-6">
+                  <Shield size={28} />
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-2">Complete Your Profile</h3>
+                <p className="text-sm text-gray-500 mb-6">
+                  You successfully authenticated with Google. Please enter your phone number to complete registration.
+                </p>
+                <form onSubmit={handlePhoneSubmit} className="space-y-4">
+                  <InputField 
+                    icon={Phone} 
+                    type="tel" 
+                    value={googlePhone} 
+                    onChange={(e) => setGooglePhone(e.target.value)} 
+                    placeholder="Phone Number (e.g. 98xxxxxxxx)" 
+                  />
+                  <Button 
+                    type="submit" 
+                    disabled={isLoading} 
+                    className="w-full bg-[#3fa8e4] hover:bg-[#3596cc] py-3 text-base shadow-lg transition-all"
+                  >
+                    {isLoading ? <Loader2 className="animate-spin mx-auto" /> : 'Complete Registration'}
+                  </Button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
         <div className="container mx-auto max-w-4xl w-full grid grid-cols-1 md:grid-cols-2 bg-white rounded-2xl shadow-2xl overflow-hidden">
           <div className="hidden md:flex flex-col justify-center p-12 text-white relative overflow-hidden">
             <motion.div
@@ -144,7 +307,7 @@ export default function LoginPage() {
               animate={{ opacity: 1 }}
               transition={{ staggerChildren: 0.1 }}
             >
-              <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="text-5xl font-extrabold leading-tight font-poppins  text-shadow-lg">
+              <motion.h1 initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="text-5xl font-extrabold leading-tight font-poppins text-shadow-lg">
                 Welcome Back!
               </motion.h1>
               <motion.p initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, delay: 0.1, ease: 'easeOut' }} className="mt-4 text-lg font-light text-shadow">
@@ -179,14 +342,24 @@ export default function LoginPage() {
                     <motion.div
                       key="error"
                       initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
-                      className="flex flex-col text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4"
+                      className="flex flex-col text-sm text-red-800 bg-red-100 p-3 rounded-lg mb-4 text-left"
                     >
                       <div className="flex items-center">
                         <AlertCircle className="mr-2 h-5 w-5 flex-shrink-0" /> {error}
                       </div>
+                      {showResend && (
+                        <button
+                          type="button"
+                          onClick={handleResendVerification}
+                          className="mt-2 text-xs font-bold text-[#3fa8e4] hover:underline self-start pl-7"
+                        >
+                          Resend Verification Email
+                        </button>
+                      )}
                     </motion.div>
                   )}
                 </AnimatePresence>
+                
                 <motion.form onSubmit={handleSubmit} className="space-y-4" initial={{ opacity: 0 }} animate={{ opacity: 1, transition: { staggerChildren: 0.1 } }}>
                   <AnimatePresence>
                     {!isLogin && (
@@ -223,8 +396,36 @@ export default function LoginPage() {
                     </Button>
                   </motion.div>
                 </motion.form>
+
+                {/* Google Login Section */}
+                <div className="relative my-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-gray-200"></div>
+                  </div>
+                  <div className="relative flex justify-center text-sm">
+                    <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  </div>
+                </div>
+
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }}>
+                  <button
+                    type="button"
+                    onClick={handleGoogleSignIn}
+                    disabled={isLoading}
+                    className="w-full flex items-center justify-center space-x-3 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 font-semibold py-3 px-4 rounded-xl shadow-sm hover:shadow transition-all duration-300 transform active:scale-[0.98]"
+                  >
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path
+                        fill="#EA4335"
+                        d="M12.24 10.285V14.4h6.887c-.648 2.41-2.519 4.2-5.136 4.2A5.626 5.626 0 018.3 12.985a5.626 5.626 0 015.69-5.615c1.472 0 2.8.56 3.8 1.485l3.15-3.15C18.99 3.865 16.29 2.5 13.99 2.5a9.5 9.5 0 00-9.5 9.5 9.5 0 009.5 9.5c5.3 0 9.5-3.8 9.5-9.5 0-.61-.06-1.21-.18-1.785H12.24z"
+                      />
+                    </svg>
+                    <span>Google Sign In</span>
+                  </button>
+                </motion.div>
+
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5, ease: 'easeOut' }} className="text-center mt-6">
-                  <button onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMessage(null); }} className="text-sm text-[#3fa8e4] hover:underline font-semibold">
+                  <button onClick={() => { setIsLogin(!isLogin); setError(null); setSuccessMessage(null); setShowResend(false); }} className="text-sm text-[#3fa8e4] hover:underline font-semibold">
                     {isLogin ? 'Need an account? Sign Up' : 'Already have an account? Login'}
                   </button>
                 </motion.div>

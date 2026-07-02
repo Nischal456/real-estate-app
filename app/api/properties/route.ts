@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { adminDb, adminAuth } from '@/lib/firebase-admin';
 import { v2 as cloudinary } from 'cloudinary';
 import sharp from 'sharp';
-import { Property } from '@/types';
+import { getPropertiesFromDb } from '@/lib/properties';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -69,33 +69,18 @@ export async function POST(request: Request) {
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const query = searchParams.get('query')?.toLowerCase().trim();
-    const type = searchParams.get('type');
-    const location = searchParams.get('location')?.toLowerCase().trim();
-    const status = searchParams.get('status');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
-    const beds = searchParams.get('beds');
-    const baths = searchParams.get('baths');
+    const filters = {
+      query: searchParams.get('query') || undefined,
+      type: searchParams.get('type') || undefined,
+      location: searchParams.get('location') || undefined,
+      status: searchParams.get('status') || undefined,
+      minPrice: searchParams.get('minPrice') || undefined,
+      maxPrice: searchParams.get('maxPrice') || undefined,
+      beds: searchParams.get('beds') || undefined,
+      baths: searchParams.get('baths') || undefined,
+    };
 
-    const querySnapshot = await adminDb.collection("properties").get();
-    const allProperties: Property[] = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }) as Property);
-    const filteredProperties = allProperties.filter(p => {
-      const statusMatch = !status || p.status === status;
-      const typeMatch = !type || p.propertyType === type;
-      const locationMatch = !location || (p.location && p.location.toLowerCase().includes(location));
-      const queryMatch = !query || (p.title && p.title.toLowerCase().includes(query)) || (p.description && p.description.toLowerCase().includes(query));
-      
-      const priceVal = parseFloat(p.price);
-      const minPriceMatch = !minPrice || isNaN(priceVal) || priceVal >= parseFloat(minPrice);
-      const maxPriceMatch = !maxPrice || isNaN(priceVal) || priceVal <= parseFloat(maxPrice);
-      
-      const bedsMatch = !beds || parseInt(p.beds || '0') >= parseInt(beds);
-      const bathsMatch = !baths || parseInt(p.baths || '0') >= parseInt(baths);
-
-      return statusMatch && typeMatch && locationMatch && queryMatch && minPriceMatch && maxPriceMatch && bedsMatch && bathsMatch;
-    });
-    const sortedProperties = filteredProperties.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const sortedProperties = await getPropertiesFromDb(filters);
     return NextResponse.json(sortedProperties, { status: 200 });
   } catch (error) {
     console.error("Error fetching properties: ", error);

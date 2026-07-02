@@ -65,7 +65,7 @@ export function FeaturedPropertiesClient({ properties }: { properties: Property[
           </motion.p>
         ) : (
           <motion.div 
-            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8"
+            className="flex overflow-x-auto snap-x snap-mandatory gap-6 pb-6 -mx-4 px-4 scrollbar-none sm:mx-0 sm:px-0 sm:grid sm:grid-cols-2 md:grid-cols-4 sm:gap-8 sm:overflow-visible sm:pb-0"
             variants={containerVariants}
             initial="hidden"
             whileInView="visible"
@@ -76,6 +76,7 @@ export function FeaturedPropertiesClient({ properties }: { properties: Property[
                 key={prop.id}
                 variants={itemVariants}
                 whileHover={{ scale: 1.04, transition: { type: 'spring', stiffness: 300 } }}
+                className="min-w-[280px] max-w-[320px] w-[80%] sm:w-full snap-start flex-shrink-0 sm:flex-shrink"
               >
                 <PropertyCard property={prop} />
               </motion.div>

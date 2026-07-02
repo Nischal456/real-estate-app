@@ -3,6 +3,8 @@ import { HeroSection } from "@/components/sections/HeroSection";
 import { FeaturedProperties } from "@/components/sections/FeaturedProperties";
 import { Footer } from "@/components/sections/Footer";
 
+export const dynamic = 'force-dynamic';
+
 export default function HomePage() {
   return (
     <div className="bg-gray-50 min-h-screen">

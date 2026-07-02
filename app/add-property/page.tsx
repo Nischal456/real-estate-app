@@ -11,6 +11,8 @@ import Image from 'next/image';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd';
+import { sendEmailVerification } from 'firebase/auth';
+import Link from 'next/link';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   label: string;
@@ -140,6 +142,46 @@ export default function AddPropertyPage() {
 
   if (authLoading || !user) {
     return <div className="flex h-screen items-center justify-center"><Loader2 className="h-12 w-12 animate-spin text-[#3fa8e4]" /></div>;
+  }
+
+  if (!user.emailVerified) {
+    return (
+      <>
+        <Header />
+        <main className="min-h-[70vh] bg-gray-50 flex items-center justify-center py-12 px-6">
+          <div className="bg-white p-8 rounded-2xl shadow-xl max-w-md w-full text-center border border-gray-100">
+            <div className="mx-auto w-16 h-16 bg-amber-50 text-amber-500 rounded-full flex items-center justify-center mb-6">
+              <AlertCircle size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">Verification Required</h2>
+            <p className="text-gray-500 mb-6">
+              You must verify your email address (**{user.email}**) before you can list properties on E-Bazar Securities.
+            </p>
+            <div className="space-y-3 flex flex-col">
+              <button 
+                type="button"
+                onClick={async () => {
+                  try {
+                    await sendEmailVerification(user);
+                    alert("Verification link resent! Please check your inbox.");
+                  } catch (err) {
+                    const error = err as Error;
+                    alert(error.message || "Failed to resend verification email.");
+                  }
+                }}
+                className="w-full bg-[#3fa8e4] hover:bg-[#3596cc] text-white font-semibold py-3 px-6 rounded-xl shadow-md transition-colors"
+              >
+                Resend Verification Email
+              </button>
+              <Link href="/" className="w-full text-center bg-gray-50 hover:bg-gray-100 text-gray-700 font-semibold py-3 px-6 rounded-xl transition-colors">
+                Back to Home
+              </Link>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    );
   }
 
   return (

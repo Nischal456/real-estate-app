@@ -4,38 +4,21 @@ import { Property } from '@/types';
 import { Suspense } from 'react';
 import { Loader2 } from 'lucide-react';
 import { PropertiesClientView } from './PropertiesClientView'; // Import the new client component
+import { getPropertiesFromDb } from '@/lib/properties';
 
 async function getFilteredProperties(searchParams: { [key: string]: string | string[] | undefined }): Promise<Property[]> {
   try {
-    const params = new URLSearchParams();
-    const query = searchParams.query;
-    const type = searchParams.type;
-    const location = searchParams.location;
-    const status = searchParams.status;
-
-    const minPrice = searchParams.minPrice;
-    const maxPrice = searchParams.maxPrice;
-    const beds = searchParams.beds;
-    const baths = searchParams.baths;
-
-    if (query && typeof query === 'string') params.append('query', query);
-    if (type && typeof type === 'string') params.append('type', type);
-    if (location && typeof location === 'string') params.append('location', location);
-    if (status && typeof status === 'string') params.append('status', status);
-    if (minPrice && typeof minPrice === 'string') params.append('minPrice', minPrice);
-    if (maxPrice && typeof maxPrice === 'string') params.append('maxPrice', maxPrice);
-    if (beds && typeof beds === 'string') params.append('beds', beds);
-    if (baths && typeof baths === 'string') params.append('baths', baths);
-    
-    const res = await fetch(`${process.env.NEXT_PUBLIC_APP_URL}/api/properties?${params.toString()}`, { 
-      cache: 'no-store' 
-    });
-
-    if (!res.ok) {
-      console.error("Failed to fetch properties:", await res.text());
-      return [];
-    }
-    return res.json();
+    const filters = {
+      query: typeof searchParams.query === 'string' ? searchParams.query : undefined,
+      type: typeof searchParams.type === 'string' ? searchParams.type : undefined,
+      location: typeof searchParams.location === 'string' ? searchParams.location : undefined,
+      status: typeof searchParams.status === 'string' ? searchParams.status : undefined,
+      minPrice: typeof searchParams.minPrice === 'string' ? searchParams.minPrice : undefined,
+      maxPrice: typeof searchParams.maxPrice === 'string' ? searchParams.maxPrice : undefined,
+      beds: typeof searchParams.beds === 'string' ? searchParams.beds : undefined,
+      baths: typeof searchParams.baths === 'string' ? searchParams.baths : undefined,
+    };
+    return await getPropertiesFromDb(filters);
   } catch (error) {
     console.error("An error occurred while fetching properties:", error);
     return [];
